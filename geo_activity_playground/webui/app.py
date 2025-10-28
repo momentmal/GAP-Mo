@@ -113,6 +113,10 @@ def web_ui_main(
     )
     app = Flask(__name__)
 
+#modification for local VR rendering
+    from flask_cors import CORS
+    CORS(app)  # allow all origins
+
     database_path = pathlib.Path("database.sqlite")
     logger.info(f"Using database file at '{database_path.absolute()}'.")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{database_path.absolute()}"
@@ -291,9 +295,15 @@ def web_ui_main(
         )
         return variables
 
-    app.run(host=host, port=port)
-
-
+    #mod for local VR rendering
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        ssl_context=(
+            "C:/Dropbox/apps/_scripts/chatgpt/threejs-webXR-map/cert.pem",
+            "C:/Dropbox/apps/_scripts/chatgpt/threejs-webXR-map/key.pem",
+        )
+    )
 def _try_get_version():
     try:
         return importlib.metadata.version("geo-activity-playground")
