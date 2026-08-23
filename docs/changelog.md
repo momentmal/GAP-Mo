@@ -20,7 +20,14 @@ Types of changes
 Added:
 
 - The date headings in the “Latest activities” list on the landing page link to the respective day overview.
+- The landing page shows week, month and year totals against the previous period.
+- The landing page lists recently used equipment with its maintenance progress and the best activities of the last 90 days.
 - After an update, a dismissible note at the top of the page states the previously used version and links to the changelog, once per browser. ([GH-495](https://github.com/martin-ueding/geo-activity-playground/issues/495))
+
+Changed:
+
+- All charts now scale to the width of their container instead of using a fixed pixel width. Charts in tabs no longer render at a fallback width.
+- The landing page is split into an activity feed and a sidebar with the auxiliary statistics.
 
 Fixed:
 
