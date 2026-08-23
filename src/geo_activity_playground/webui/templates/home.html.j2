@@ -36,7 +36,7 @@
 <h2>{{ _('Latest activities') }}</h2>
 
 {% for date, date_data in latest_activities.items() %}
-<h3>{{ date }}</h3>
+<h3><a href="{{ url_for('calendar.day', year=date.year, month=date.month, day=date.day) }}">{{ date }}</a></h3>
 {% for activity_batch in date_data|batch(3) %}
 <div class="row row-cols-1 row-cols-md-3 g-4 mb-3">
     {% for elem in activity_batch %}
