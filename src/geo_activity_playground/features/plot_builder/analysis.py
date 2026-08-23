@@ -2,6 +2,7 @@ import altair as alt
 import pandas as pd
 from flask_babel import lazy_gettext as _
 
+from ...webui.plot_util import to_vega
 from .model import PlotSpec
 
 MARKS = {
@@ -178,7 +179,5 @@ def make_parametric_plot(df: pd.DataFrame, spec: PlotSpec) -> dict[str, str]:
             tooltips.append(alt.Tooltip(spec.facet, title=str(VARIABLES_2[spec.facet])))
 
         key = str(int(key) if isinstance(key, float) else key)
-        chart_groups[key] = (
-            chart.encode(*encodings, tooltips).interactive().to_json(format="vega")
-        )
+        chart_groups[key] = to_vega(chart.encode(*encodings, tooltips).interactive())
     return chart_groups

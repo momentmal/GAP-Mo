@@ -13,6 +13,7 @@ from ...core.datamodel import DB, Equipment
 from ...core.internal_pictures import delete_internal_picture, save_internal_picture
 from ...webui.authenticator import Authenticator, needs_authentication
 from ...webui.flasher import Flasher, FlashTypes
+from ...webui.plot_util import to_vega
 from .model import (
     MaintenanceAction,
     MaintenanceActionPhoto,
@@ -50,7 +51,7 @@ def _maintenance_plots(
     cost_title = money_title(_("Cost"), currency)
     total_cost_title = money_title(_("Total cost"), currency)
 
-    cost_by_equipment_plot = (
+    cost_by_equipment_plot = to_vega(
         alt.Chart(actions, height=300, title=_("Cost by equipment"))
         .mark_bar()
         .encode(
@@ -61,10 +62,9 @@ def _maintenance_plots(
                 alt.Tooltip("sum(cost):Q", title=cost_title, format=".2f"),
             ],
         )
-        .to_json(format="vega")
     )
 
-    cost_by_year_plot = (
+    cost_by_year_plot = to_vega(
         alt.Chart(actions, height=300, title=_("Cost by year"))
         .mark_bar()
         .encode(
@@ -77,10 +77,9 @@ def _maintenance_plots(
                 alt.Tooltip("sum(cost):Q", title=cost_title, format=".2f"),
             ],
         )
-        .to_json(format="vega")
     )
 
-    cost_vs_usage_plot = (
+    cost_vs_usage_plot = to_vega(
         alt.Chart(summary, height=300, title=_("Cost vs. usage"))
         .mark_point()
         .encode(
@@ -94,7 +93,6 @@ def _maintenance_plots(
             ],
         )
         .interactive()
-        .to_json(format="vega")
     )
 
     return {

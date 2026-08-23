@@ -10,6 +10,7 @@ from flask_babel import gettext as _
 from ...core.meta_search import apply_search_filter
 from ...webui.authenticator import Authenticator
 from ...webui.columns import ColumnDescription, column_distance, column_elevation_gain
+from ...webui.plot_util import to_vega
 from ...webui.search_context import search_context
 
 
@@ -138,13 +139,12 @@ def _make_eddington_plot(
 ) -> str:
     x = list(range(1, max(eddington_df[column_name]) + 1))
     y = [v / divisor for v in x]
-    return (
+    return to_vega(
         (
             (
                 alt.Chart(
                     eddington_df,
                     height=500,
-                    width=800,
                     title=_("%(display_name)s Eddington Number %(en)s")
                     % {"display_name": display_name, "en": en},
                 )
@@ -181,9 +181,7 @@ def _make_eddington_plot(
                 .mark_line(color="red")
                 .encode(alt.X(column_name), alt.Y("total"))
             )
-        )
-        .interactive(bind_x=True, bind_y=True)
-        .to_json(format="vega")
+        ).interactive(bind_x=True, bind_y=True)
     )
 
 
@@ -241,11 +239,11 @@ def _get_eddington_number_history(
         eddington_number_history["eddington_number"].append(len(top_days) * divisor)
     history = pd.DataFrame(eddington_number_history)
 
-    return (
+    return to_vega(
         alt.Chart(history)
         .mark_line(interpolate="step-after")
         .encode(
             alt.X("date", title=_("Date")),
             alt.Y("eddington_number", title=_("Eddington number")),
         )
-    ).to_json(format="vega")
+    )

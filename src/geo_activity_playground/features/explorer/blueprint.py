@@ -55,6 +55,7 @@ from ...core.tile_visits import (
 )
 from ...core.tiles import compute_tile, get_tile_upper_left_lat_lon
 from ...webui.authenticator import Authenticator, needs_authentication
+from ...webui.plot_util import to_vega
 from ...webui.search_context import search_context
 from .clustering import (
     compute_current_state_for_zoom,
@@ -885,21 +886,20 @@ def plot_tile_evolution(tiles: pd.DataFrame) -> str:
     if len(tiles) == 0:
         return ""
     tiles["count"] = np.arange(1, len(tiles) + 1)
-    return (
+    return to_vega(
         alt.Chart(tiles, title=_("Tiles"))
         .mark_line(interpolate="step-after")
         .encode(
             alt.X("time", title=_("Time")), alt.Y("count", title=_("Number of tiles"))
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def plot_cluster_evolution(cluster_evolution: pd.DataFrame) -> str:
     if len(cluster_evolution) == 0:
         return ""
-    return (
+    return to_vega(
         alt.Chart(cluster_evolution, title=_("Cluster"))
         .mark_line(interpolate="step-after")
         .encode(
@@ -907,14 +907,13 @@ def plot_cluster_evolution(cluster_evolution: pd.DataFrame) -> str:
             alt.Y("max_cluster_size", title=_("Maximum cluster size")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def plot_square_evolution(square_evolution: pd.DataFrame) -> str:
     if len(square_evolution) == 0:
         return ""
-    return (
+    return to_vega(
         alt.Chart(square_evolution, title=_("Square"))
         .mark_line(interpolate="step-after")
         .encode(
@@ -922,5 +921,4 @@ def plot_square_evolution(square_evolution: pd.DataFrame) -> str:
             alt.Y("max_square_size", title=_("Maximum square size")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )

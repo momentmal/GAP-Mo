@@ -11,6 +11,7 @@ from ...core.config import ConfigAccessor
 from ...core.datamodel import DB, Activity
 from ...webui.authenticator import Authenticator, needs_authentication
 from ...webui.flasher import Flasher, FlashTypes
+from ...webui.plot_util import to_vega
 from .analysis import make_plots, segment_df
 from .matching import (
     extract_segment_from_geojson,
@@ -135,7 +136,7 @@ def make_segments_blueprint(
             }
         )
 
-        distance_chart = (
+        distance_chart = to_vega(
             alt.Chart(distance_df)
             .mark_rect()
             .encode(
@@ -147,7 +148,6 @@ def make_segments_blueprint(
                     title=_("Distance / m"),
                 ),
             )
-            .to_json(format="vega")
         )
 
         return render_template(

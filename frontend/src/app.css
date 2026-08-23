@@ -12,3 +12,13 @@
     height: auto;
     max-width: 100%;
 }
+
+/* Vega-Embed's injected stylesheet makes its container `display: inline-block`,
+   which shrink-wraps the chart. A chart whose width comes from
+   `containerSize()` would then measure a collapsed parent and never reach a
+   usable width. This selector is one step more specific than the library's, so
+   it wins no matter where the injected style tag lands in the head. */
+div.vega-embed {
+    display: block;
+    width: 100%;
+}

@@ -2,6 +2,7 @@ import altair as alt
 import pandas as pd
 from flask_babel import gettext as _
 
+from ...webui.plot_util import to_vega
 from .model import Segment
 
 
@@ -57,8 +58,8 @@ def segment_df(segment: Segment) -> pd.DataFrame:
 
 
 def make_plots(df: pd.DataFrame) -> dict[str, str]:
-    duration_histogram = (
-        alt.Chart(df, width=500)
+    duration_histogram = to_vega(
+        alt.Chart(df)
         .mark_bar()
         .encode(
             alt.X("duration_s", bin=alt.Bin(step=15), title=_("Duration / s")),
@@ -66,18 +67,16 @@ def make_plots(df: pd.DataFrame) -> dict[str, str]:
             alt.Color("direction", title=_("Direction")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
-    duration_boxplot = (
-        alt.Chart(df, width=500)
+    duration_boxplot = to_vega(
+        alt.Chart(df)
         .mark_boxplot()
         .encode(
             alt.Y("direction", title=_("Direction")),
             alt.X("duration_s", title=_("Duration / s")),
             alt.Color("direction", title=_("Direction")),
         )
-        .to_json(format="vega")
     )
 
     return {

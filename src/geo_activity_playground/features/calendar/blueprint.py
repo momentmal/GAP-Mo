@@ -20,6 +20,7 @@ from ...core.datamodel import (
     query_activity_meta,
 )
 from ...core.time_conversion import local_ymd_from_utc
+from ...webui.plot_util import to_vega
 from ..explorer.clustering import (
     get_cluster_tile_activations_df,
     get_square_history_df,
@@ -196,10 +197,8 @@ def _plot_monthly_progress(monthly: pd.DataFrame) -> str:
             ),
         )
     )
-    return (
-        alt.layer(distance, tiles)
-        .resolve_scale(y="independent", color="independent")
-        .to_json(format="vega")
+    return to_vega(
+        alt.layer(distance, tiles).resolve_scale(y="independent", color="independent")
     )
 
 
@@ -211,7 +210,7 @@ def _plot_category_distance(frame: pd.DataFrame, column: str, title: str) -> str
     )
     grouped[column] = grouped[column].fillna(_("Unknown"))
     grouped = grouped.sort_values("distance_km", ascending=False)
-    return (
+    return to_vega(
         alt.Chart(grouped, title=title)
         .mark_bar()
         .encode(
@@ -222,7 +221,6 @@ def _plot_category_distance(frame: pd.DataFrame, column: str, title: str) -> str
                 alt.Tooltip("distance_km:Q", title=_("Distance / km"), format=".1f"),
             ],
         )
-        .to_json(format="vega")
     )
 
 
@@ -262,10 +260,8 @@ def _plot_daily_progress(daily: pd.DataFrame) -> str:
             ),
         )
     )
-    return (
-        alt.layer(distance, tiles)
-        .resolve_scale(y="independent", color="independent")
-        .to_json(format="vega")
+    return to_vega(
+        alt.layer(distance, tiles).resolve_scale(y="independent", color="independent")
     )
 
 

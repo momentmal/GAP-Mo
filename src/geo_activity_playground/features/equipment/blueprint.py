@@ -12,7 +12,7 @@ from ...core.datamodel import DB, Equipment, query_activity_meta
 from ...core.internal_pictures import delete_internal_picture, save_internal_picture
 from ...webui.authenticator import Authenticator, needs_authentication
 from ...webui.flasher import Flasher, FlashTypes
-from ...webui.plot_util import make_kind_scale
+from ...webui.plot_util import make_kind_scale, to_vega
 from ..maintenance.stats import (
     get_maintenance_actions_table,
     get_maintenance_flow_by_title,
@@ -205,14 +205,13 @@ def _maintenance_flow_plot(links: pd.DataFrame, currency: str) -> str | None:
     chart = (
         alt.layer(links_chart, equipment_rects, title_rects, equipment_text, title_text)
         .properties(
-            width=700,
             height=max(300, 24 * max(len(equipment_order), len(title_order))),
             title=_("Maintenance cost flow"),
         )
         .configure_view(strokeWidth=0)
         .configure_axis(grid=False, domain=False, ticks=False, labels=False)
     )
-    return chart.to_json(format="vega")
+    return to_vega(chart)
 
 
 def _equipment_plots(config_accessor: ConfigAccessor, equipment: str) -> dict[str, str]:
@@ -225,11 +224,10 @@ def _equipment_plots(config_accessor: ConfigAccessor, equipment: str) -> dict[st
         }
     )
 
-    total_distances_plot = (
+    total_distances_plot = to_vega(
         alt.Chart(
             total_distances,
             height=300,
-            width=300,
             title=_("Usage over Time"),
         )
         .mark_line(interpolate="step-after")
@@ -246,10 +244,9 @@ def _equipment_plots(config_accessor: ConfigAccessor, equipment: str) -> dict[st
             ],
         )
         .interactive()
-        .to_json(format="vega")
     )
 
-    yearly_distance_plot = (
+    yearly_distance_plot = to_vega(
         alt.Chart(
             selection,
             height=300,
@@ -272,10 +269,9 @@ def _equipment_plots(config_accessor: ConfigAccessor, equipment: str) -> dict[st
                 alt.Tooltip("kind:N", title=_("Kind")),
             ],
         )
-        .to_json(format="vega")
     )
 
-    usages_plot = (
+    usages_plot = to_vega(
         alt.Chart(
             selection,
             height=300,
@@ -295,7 +291,6 @@ def _equipment_plots(config_accessor: ConfigAccessor, equipment: str) -> dict[st
                 ),
             ],
         )
-        .to_json(format="vega")
     )
 
     return {
@@ -359,10 +354,8 @@ def make_equipment_blueprint(
             .reset_index()
         )
 
-        stacked_area_chart = (
-            alt.Chart(
-                monthly_data, height=300, width=1200, title=_("Monthly Equipment Usage")
-            )
+        stacked_area_chart = to_vega(
+            alt.Chart(monthly_data, height=300, title=_("Monthly Equipment Usage"))
             .mark_area()
             .encode(
                 x=alt.X("month:T", title=_("Month")),
@@ -377,7 +370,6 @@ def make_equipment_blueprint(
                 ],
             )
             .interactive(bind_y=False)
-            .to_json(format="vega")
         )
 
         variables = {

@@ -6,6 +6,7 @@ from flask_babel import gettext as _
 
 from ...core.datamodel import query_activity_meta
 from ...webui.columns import ColumnDescription, column_distance, column_elevation_gain
+from ...webui.plot_util import to_vega
 
 
 def make_bubble_chart_blueprint() -> Blueprint:
@@ -71,7 +72,7 @@ def make_bubble_chart_blueprint() -> Blueprint:
 
 
 def _make_bubble_chart(bubble_data, column: ColumnDescription):
-    return (
+    return to_vega(
         alt.Chart(
             bubble_data,
             title=_("%(display_name)s per Activity (Bubble Chart)")
@@ -101,14 +102,13 @@ def _make_bubble_chart(bubble_data, column: ColumnDescription):
                 alt.Tooltip("activity_url:N", title=_("Activity Link")),
             ],
         )
-        .properties(height=800, width=1200)
+        .properties(height=800)
         .interactive()
-        .to_json(format="vega")
     )
 
 
 def _make_day_bubble_chart(day_bubble_data, column: ColumnDescription):
-    return (
+    return to_vega(
         alt.Chart(
             day_bubble_data,
             title=_("%(display_name)s per Day (Bubble Chart)")
@@ -138,7 +138,6 @@ def _make_day_bubble_chart(day_bubble_data, column: ColumnDescription):
                 alt.Tooltip("day_url:N", title=_("Day Link")),
             ],
         )
-        .properties(height=800, width=1200)
+        .properties(height=800)
         .interactive()
-        .to_json(format="vega")
     )

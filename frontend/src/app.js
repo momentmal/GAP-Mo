@@ -22,6 +22,9 @@ import "./version-notice.js";
 import vegaEmbed from "vega-embed";
 window.vegaEmbed = vegaEmbed;
 
+import { embedChart } from "./vega.js";
+window.embedChart = embedChart;
+
 import "table-sort-js";
 
 import { progressMarkerIcon } from "./progress-markers.js";

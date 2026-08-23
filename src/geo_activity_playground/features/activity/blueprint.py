@@ -53,6 +53,7 @@ from ...core.tile_visits import (
 )
 from ...webui.authenticator import Authenticator, needs_authentication
 from ...webui.columns import TIME_SERIES_COLUMNS
+from ...webui.plot_util import to_vega
 from ..directory_import.importer import get_metadata_from_path
 from ..explorer.clustering import get_cluster_tiles_gained_by_activity
 from ..explorer.model import TileStyleName, get_tile_styles
@@ -549,7 +550,7 @@ def make_activity_blueprint(
 
 
 def speed_time_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Speed"))
         .mark_line()
         .encode(
@@ -558,7 +559,6 @@ def speed_time_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
@@ -569,19 +569,18 @@ def speed_distribution_plot(time_series: pd.DataFrame) -> str:
             "step": time_series["time"].diff().dt.total_seconds() / 60,
         }
     ).dropna()
-    return (
+    return to_vega(
         alt.Chart(df.loc[df["speed"] > 0], title=_("Speed distribution"))
         .mark_bar()
         .encode(
             alt.X("speed", bin=alt.Bin(step=5), title=_("Speed / km/h")),
             alt.Y("sum(step)", title=_("Duration / min")),
         )
-        .to_json(format="vega")
     )
 
 
 def distance_time_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Distance"))
         .mark_line()
         .encode(
@@ -590,12 +589,11 @@ def distance_time_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive()
-        .to_json(format="vega")
     )
 
 
 def elevation_time_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Elevation"))
         .mark_line()
         .encode(
@@ -608,12 +606,11 @@ def elevation_time_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def elevation_gain_cum_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Elevation Gain"))
         .mark_line()
         .encode(
@@ -626,12 +623,11 @@ def elevation_gain_cum_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def heart_rate_time_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Heart Rate"))
         .mark_line()
         .encode(
@@ -640,12 +636,11 @@ def heart_rate_time_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def cadence_time_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Cadence"))
         .mark_line()
         .encode(
@@ -654,12 +649,11 @@ def cadence_time_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def power_time_plot(time_series: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(time_series, title=_("Power"))
         .mark_line()
         .encode(
@@ -668,12 +662,11 @@ def power_time_plot(time_series: pd.DataFrame) -> str:
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)
-        .to_json(format="vega")
     )
 
 
 def heart_rate_zone_plot(heart_zones: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(heart_zones, title=_("Heart Rate Zones"))
         .mark_bar()
         .encode(
@@ -681,54 +674,49 @@ def heart_rate_zone_plot(heart_zones: pd.DataFrame) -> str:
             alt.Y("heartzone:O", title=_("Zone")),
             alt.Color("heartzone:O", scale=alt.Scale(scheme="turbo"), title=_("Zone")),
         )
-        .to_json(format="vega")
     )
 
 
 def name_tick_plot(meta: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(meta, title=_("Repetitions"))
         .mark_tick()
         .encode(
             alt.X("start_local", title=_("Date")),
         )
-        .to_json(format="vega")
     )
 
 
 def name_equipment_plot(meta: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(meta, title=_("Equipment"))
         .mark_bar()
         .encode(
             alt.X("count()", title=_("Count")), alt.Y("equipment", title=_("Equipment"))
         )
-        .to_json(format="vega")
     )
 
 
 def name_distance_plot(meta: pd.DataFrame) -> str:
-    return (
+    return to_vega(
         alt.Chart(meta, title=_("Distance"))
         .mark_bar()
         .encode(
             alt.X("distance_km", bin=True, title=_("Distance / km")),
             alt.Y("count()", title=_("Count")),
         )
-        .to_json(format="vega")
     )
 
 
 def name_minutes_plot(meta: pd.DataFrame) -> str:
     minutes = meta["elapsed_time"].dt.total_seconds() / 60
-    return (
+    return to_vega(
         alt.Chart(pd.DataFrame({"minutes": minutes}), title=_("Elapsed time"))
         .mark_bar()
         .encode(
             alt.X("minutes", bin=True, title=_("Time / min")),
             alt.Y("count()", title=_("Count")),
         )
-        .to_json(format="vega")
     )
 
 
