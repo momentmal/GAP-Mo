@@ -17,6 +17,10 @@ Types of changes
 
 ## Unreleased
 
+Added:
+
+- After an update, a small dismissible note at the top of the page states the previously used version and the current one, with a link to the changelog. The last seen version is kept in the browser's local storage, so the note appears only once per browser. ([GH-495](https://github.com/martin-ueding/geo-activity-playground/issues/495))
+
 Fixed:
 
 - The map tile URL is now checked before it is stored: the placeholders are validated and a sample tile is downloaded from the server. A faulty URL is reported with an error message and the input is kept in the form, instead of being saved and then breaking the settings page with an internal server error. The widespread `{z}` placeholder is accepted and converted into `{zoom}`. ([GH-494](https://github.com/martin-ueding/geo-activity-playground/issues/494))
