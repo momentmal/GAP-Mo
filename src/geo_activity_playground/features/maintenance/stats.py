@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import sqlalchemy as sa
 
@@ -54,3 +56,36 @@ def get_due_tasks() -> list[RecurringTask]:
     tasks = DB.session.scalars(sa.select(RecurringTask)).all()
     due = [task for task in tasks if task.is_overdue(task.equipment.total_distance_km)]
     return sorted(due, key=lambda task: (task.equipment.name, task.title))
+
+
+def get_task_progress(
+    task: RecurringTask, current_km: float, now: datetime.date | None = None
+) -> float | None:
+    """Fraction of the task's interval that is used up, or None if unmeasurable.
+
+    A task with both a distance and a time interval is as far along as the more
+    advanced of the two. Values above one mean the task is overdue.
+    """
+    last = task.last_execution
+    if last is None:
+        return None
+    now = now or datetime.date.today()
+    fractions = []
+    if task.interval_km and last.usage_km is not None:
+        fractions.append((current_km - last.usage_km) / task.interval_km)
+    if task.interval_days:
+        fractions.append((now - last.date).days / task.interval_days)
+    return max(fractions) if fractions else None
+
+
+def get_next_task(equipment: Equipment) -> tuple[RecurringTask, float] | None:
+    """The recurring task of this equipment that is closest to being due."""
+    current_km = equipment.total_distance_km
+    rated = [
+        (task, progress)
+        for task in equipment.recurring_tasks
+        if (progress := get_task_progress(task, current_km)) is not None
+    ]
+    if not rated:
+        return None
+    return max(rated, key=lambda pair: pair[1])

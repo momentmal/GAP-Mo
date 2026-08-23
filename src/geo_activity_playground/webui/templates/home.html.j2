@@ -1,66 +1,143 @@
 {% extends "page.html.j2" %}
 
 {% block container %}
-<div class="row mb-3">
-</div>
 
-{% if due_tasks %}
-<div class="row mb-3">
-    <div class="col">
-        <div class="card border-danger">
+{% if latest_activities %}
+{{ map_script() }}
+<div class="row g-4">
+
+    {# Main column: the activity feed, preceded by the plot of what led up to it. #}
+    <div class="col-lg-8">
+        <h2 class="h4">{{ _('Last 30 days') }}</h2>
+        {{ tabbed_vega(last_30_days_plot) }}
+
+        <h2 class="h4">{{ _('Latest activities') }}</h2>
+        {% for date, date_data in latest_activities.items() %}
+        <h3 class="h6 text-body-secondary mt-3">
+            <a href="{{ url_for('calendar.day', year=date.year, month=date.month, day=date.day) }}">{{ date }}</a>
+        </h3>
+        <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+            {% for elem in date_data %}
+            <div class="col">
+                <div class="card h-100 border-primary">
+                    {{ fetched_map("map-" ~ elem.activity.id, url_for('activity.geojson_line', id=elem.activity.id)) }}
+                    <div class="card-body">
+                        <a href="{{ url_for('activity.show', id=elem.activity.id) }}">
+                            <h5 class="card-title h6">{{ elem.activity.name }}</h5>
+                        </a>
+                        <p class="card-text">{{ elem.activity.emoji_string }}</p>
+                        {% if elem.activity.start_local_tz %}
+                        <p class="card-text mb-0"><small class="text-body-secondary">{{ elem.activity.start_local_tz|dt
+                                }} {{ elem.activity.iana_timezone }}</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {# Sidebar: everything that is context rather than feed. #}
+    <div class="col-lg-4">
+
+        {% if due_tasks %}
+        <div class="card border-danger mb-3">
             <div class="card-body">
-                <h2 class="h4 card-title">{{ _('Due maintenance tasks') }}</h2>
+                <h2 class="h6 card-title">{{ _('Due maintenance tasks') }}</h2>
                 <ul class="list-unstyled mb-0">
                     {% for task in due_tasks %}
-                    <li>
-                        <a href="{{ url_for('equipment.show', id=task.equipment.id) }}">{{ task.equipment.name }}</a>
-                        &middot; {{ task.title }}
-                    </li>
+                    <li><small>
+                            <a href="{{ url_for('equipment.show', id=task.equipment.id) }}">{{ task.equipment.name
+                                }}</a>
+                            &middot; {{ task.title }}
+                        </small></li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
-    </div>
-</div>
-{% endif %}
+        {% endif %}
 
-{% if latest_activities %}
-<div class="row mb-3">
-    <div class="col">
-        <h2>{{ _('Last 30 days') }}</h2>
-        {{ tabbed_vega(last_30_days_plot) }}
-    </div>
-</div>
-
-{{ map_script() }}
-<h2>{{ _('Latest activities') }}</h2>
-
-{% for date, date_data in latest_activities.items() %}
-<h3><a href="{{ url_for('calendar.day', year=date.year, month=date.month, day=date.day) }}">{{ date }}</a></h3>
-{% for activity_batch in date_data|batch(3) %}
-<div class="row row-cols-1 row-cols-md-3 g-4 mb-3">
-    {% for elem in activity_batch %}
-    <div class="col">
-        <div class="card border-primary">
-            {{ fetched_map("map-" ~ elem.activity.id, url_for('activity.geojson_line', id=elem.activity.id)) }}
-            <div class="card-body">
-                <a href="{{ url_for('activity.show', id=elem.activity.id) }}">
-                    <h5 class="card-title">{{ elem.activity.name }}</h5>
-                </a>
-                <p class="card-text">
-                    {{ elem.activity.emoji_string }}
-                </p>
-                {% if elem.activity.start_local_tz %}
-                <p class="card-text"><small class="text-body-secondary">{{ elem.activity.start_local_tz|dt }} {{
-                        elem.activity.iana_timezone }}</small></p>
-                {% endif %}
+        {% if period_stats %}
+        <div class="card mb-3">
+            <div class="card-body pb-2">
+                <h2 class="h6 card-title text-body-secondary">{{ _('Totals') }}</h2>
+                {% for period in period_stats %}
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <span class="text-body-secondary">{{ period.label }}</span>
+                    <span>
+                        <strong>{{ "%.1f"|format(period.distance_km) }}</strong> km
+                        {% if period.distance_change is not none %}
+                        {% set change = (period.distance_change * 100)|round|int %}
+                        <span class="badge {{ 'text-bg-success' if change >= 0 else 'text-bg-secondary' }}">
+                            {{ '+' if change >= 0 }}{{ change }}&thinsp;%
+                        </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="mb-2"><small class="text-body-secondary">
+                        {{ period.activities }} {{ _('activities') }}
+                        &middot; {{ "%.1f"|format(period.hours) }} h
+                        &middot; {{ "%.0f"|format(period.elevation_gain) }} m {{ _('up') }}
+                    </small></p>
+                {% endfor %}
             </div>
         </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h6 card-title text-body-secondary">{{ _('Year over year') }}</h2>
+                {{ vega_direct(year_cumulative_plot) }}
+            </div>
+        </div>
+
+        {% if equipment_status %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h6 card-title text-body-secondary">{{ _('Equipment') }}</h2>
+                {% for status in equipment_status %}
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <a href="{{ url_for('equipment.show', id=status.equipment.id) }}">{{ status.equipment.name }}</a>
+                    <span><small class="text-body-secondary">{{ "%.0f"|format(status.total_distance_km) }} km</small>
+                    </span>
+                </div>
+                {% if status.next_task %}
+                {% set percent = [(status.next_task_progress * 100)|round|int, 100]|min %}
+                <div class="progress mt-1 mb-2" style="height: 4px" role="progressbar" aria-label="{{
+                    status.next_task.title }}" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar {{ 'bg-danger' if status.next_task_progress >= 1 else 'bg-success' }}"
+                        style="width: {{ percent }}%"></div>
+                </div>
+                {% else %}
+                <div class="mb-2"></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if recent_records %}
+        <div class="card mb-3 border-success">
+            <div class="card-body">
+                <h2 class="h6 card-title text-body-secondary">{{ _('Recent highlights') }}</h2>
+                <p class="mb-2"><small class="text-body-secondary">{{ _('Best of the last 90 days.') }}</small></p>
+                {% for activity, reasons in recent_records %}
+                <div class="mb-2">
+                    <a href="{{ url_for('activity.show', id=activity.id) }}">{{ activity.name }}</a>
+                    <ul class="list-unstyled mb-0">
+                        {% for reason in reasons %}
+                        <li><small class="text-body-secondary">{{ reason }}</small></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
-    {% endfor %}
 </div>
-{% endfor %}
-{% endfor %}
 {% else %}
 <p>{{ _('You don\'t have activities yet. Either put some files into a directory') }} <tt>Activities</tt>, <a
         href="{{ url_for('upload.index') }}">{{ _('upload activities') }}</a> {{ _('or') }} <a

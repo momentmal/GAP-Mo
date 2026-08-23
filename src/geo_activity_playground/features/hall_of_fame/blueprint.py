@@ -49,15 +49,24 @@ def make_hall_of_fame_blueprint(
     return blueprint
 
 
-def nominate_activities(meta: pd.DataFrame) -> dict[int, list[str]]:
+def nominate_activities(
+    meta: pd.DataFrame, by_group: bool = True
+) -> dict[int, list[str]]:
+    """Records within `meta`, as a reason list per activity.
+
+    With `by_group`, each kind and each equipment contributes its own records on
+    top of the overall ones. That is what the hall of fame wants; callers with
+    little room want just the overall records.
+    """
     nominations: dict[int, list[str]] = collections.defaultdict(list)
 
     _nominate_activities_inner(meta, "", nominations)
 
-    for kind, group in meta.groupby("kind"):
-        _nominate_activities_inner(group, f" for {kind}", nominations)
-    for equipment, group in meta.groupby("equipment"):
-        _nominate_activities_inner(group, f" with {equipment}", nominations)
+    if by_group:
+        for kind, group in meta.groupby("kind"):
+            _nominate_activities_inner(group, f" for {kind}", nominations)
+        for equipment, group in meta.groupby("equipment"):
+            _nominate_activities_inner(group, f" with {equipment}", nominations)
 
     return nominations
 
