@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-23 10:54+0200\n"
+"POT-Creation-Date: 2026-08-23 12:12+0200\n"
 "PO-Revision-Date: 2025-12-06 21:30+0100\n"
 "Last-Translator: \n"
 "Language: de\n"
@@ -2800,11 +2800,24 @@ msgstr ""
 msgid "Shutdown Server"
 msgstr "Server herunterfahren"
 
-#: src/geo_activity_playground/webui/templates/page.html.j2:246
+#: src/geo_activity_playground/webui/templates/page.html.j2:232
+#, python-format
+msgid "You previously used version %(old)s and are now on version %(new)s."
+msgstr "Du hast zuvor Version %(old)s verwendet, jetzt läuft Version %(new)s."
+
+#: src/geo_activity_playground/webui/templates/page.html.j2:235
+msgid "See the changelog."
+msgstr "Zum Changelog."
+
+#: src/geo_activity_playground/webui/templates/page.html.j2:236
+msgid "Close"
+msgstr ""
+
+#: src/geo_activity_playground/webui/templates/page.html.j2:257
 msgid "Version"
 msgstr "Version"
 
-#: src/geo_activity_playground/webui/templates/page.html.j2:255
+#: src/geo_activity_playground/webui/templates/page.html.j2:266
 msgid "Documentation"
 msgstr "Dokumentation"
 
