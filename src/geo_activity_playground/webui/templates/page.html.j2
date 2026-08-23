@@ -226,6 +226,17 @@
             </div>
         </nav>
 
+        {% if version %}
+        <div id="version-notice" class="alert alert-info alert-dismissible fade show small py-2 d-none"
+            role="alert" data-version="{{ version }}"
+            data-message="{{ _('You previously used version %(old)s and are now on version %(new)s.', old='{old}', new=version) }}">
+            <span class="version-notice-text"></span>
+            <a href="https://martin-ueding.github.io/geo-activity-playground/changelog/" target="_blank"
+                class="alert-link">{{ _('See the changelog.') }}</a>
+            <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="{{ _('Close') }}"></button>
+        </div>
+        {% endif %}
+
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
