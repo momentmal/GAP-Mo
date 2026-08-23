@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import subprocess
 import tomllib
 import urllib.error
@@ -72,6 +73,17 @@ def update_changelog_header(version: str) -> None:
         )
     else:
         print(f"[skip] {version_header} already present")
+
+
+def release_date(version: str) -> str:
+    match = re.search(
+        rf"^## Version {re.escape(version)} — (\d{{4}}-\d{{2}}-\d{{2}})$",
+        CHANGELOG.read_text(),
+        re.MULTILINE,
+    )
+    if match is None:
+        raise RuntimeError(f"No changelog header for version {version}.")
+    return match.group(1)
 
 
 def commit_version_bump(version: str) -> None:
@@ -147,8 +159,7 @@ def create_github_release(version: str) -> None:
 def post_to_mastodon(version: str) -> None:
     step("Post to Mastodon")
 
-    today = date.today().isoformat()
-    anchor = f"version-{version.replace('.', '-')}-%E2%80%94-{today}"
+    anchor = f"version-{version.replace('.', '-')}-%E2%80%94-{release_date(version)}"
     changelog_url = f"https://martin-ueding.github.io/geo-activity-playground/changelog.html#{anchor}"
 
     text = (
