@@ -37,7 +37,7 @@ Example: `- Added new feature. (GH-123)`
 Rule: Don't hard-wrap Markdown content.
 Reason: Editors have soft-wrap that is more flexible.
 
-Rule: Keep changelog entries concise and brief. 160 characters (excluding GitHub Issue link) is the maximum. Only include the "what" in the changelog entry; the "why" is in the ticket, the "how" is in the commit.
+Rule: Keep changelog entries concise and brief. 160 characters (excluding GitHub Issue link) is the maximum. Only include the "what" in the changelog entry; the "why" is in the ticket, the "how" is in the commit. Don't try to cram everything into a single sentence, use multiple ones. Just keep the detail level sensible and obey the length limit.
 Reason: The time of readers is precious.
 
 ## Git
