@@ -25,6 +25,7 @@ Fixed:
 
 - The map tile URL is now checked before it is stored: the placeholders are validated and a sample tile is downloaded from the server. A faulty URL is reported with an error message and the input is kept in the form, instead of being saved and then breaking the settings page with an internal server error. The widespread `{z}` placeholder is accepted and converted into `{zoom}`. ([GH-494](https://github.com/martin-ueding/geo-activity-playground/issues/494))
 - Tile sources that serve 512 px tiles, like MapTiler, no longer produce scrambled images. Such tiles are downscaled to the 256 px that the image generation expects. ([GH-494](https://github.com/martin-ueding/geo-activity-playground/issues/494))
+- The Mapterhorn hillshade no longer fades out as one zooms in. The `leaflet-relief` plugin scales the terrain gradients by a fixed constant instead of the actual meters per pixel ([upstream bug](https://github.com/glandais/leaflet-relief/issues/94)), which made the shading heavy at low zoom levels and nearly invisible at high ones. Until this is fixed upstream, the webui corrects the scaling itself, so the relief now looks the same at every zoom level. ([GH-475](https://github.com/martin-ueding/geo-activity-playground/issues/475))
 
 
 ## Version 1.50.0 — 2026-08-18
