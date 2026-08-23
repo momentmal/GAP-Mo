@@ -19,6 +19,7 @@ Types of changes
 
 Added:
 
+- The date headings in the “Latest activities” list on the landing page link to the respective day overview.
 - After an update, a dismissible note at the top of the page states the previously used version and links to the changelog, once per browser. ([GH-495](https://github.com/martin-ueding/geo-activity-playground/issues/495))
 
 Fixed:
