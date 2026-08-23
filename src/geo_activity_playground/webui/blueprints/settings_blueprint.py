@@ -40,6 +40,12 @@ from ...core.duplicate_matching import merge_duplicate, pick_winner
 from ...core.enrichment import enrichment_set_timezone, update_and_commit
 from ...core.heart_rate import HeartRateZoneComputer
 from ...core.import_exclusion import ImportExclusion
+from ...core.raster_map import (
+    format_sample_tile_url,
+    normalize_tile_url_template,
+    probe_tile_url,
+    tile_url_template_error,
+)
 from ...core.tag_extraction import apply_tag_extraction, get_tags_with_extraction_regex
 from ...core.tile_visits import (
     _reset_tile_visits_db,
@@ -1269,8 +1275,22 @@ def make_settings_blueprint(
     @blueprint.route("/tile-source", methods=["GET", "POST"])
     @needs_authentication(authenticator)
     def tile_source() -> str:
+        map_tile_url = config_accessor.map().map_tile_url
         if request.method == "POST":
-            config_accessor.map().map_tile_url = request.form["map_tile_url"]
+            map_tile_url = normalize_tile_url_template(request.form["map_tile_url"])
+            error = tile_url_template_error(map_tile_url) or probe_tile_url(
+                map_tile_url
+            )
+            if error:
+                flasher.flash_message(
+                    _(
+                        "The map tile URL has not been saved: %(error)s",
+                        error=error,
+                    ),
+                    FlashTypes.DANGER,
+                )
+            else:
+                config_accessor.map().map_tile_url = map_tile_url
             config_accessor.map().map_tile_attribution = request.form[
                 "map_tile_attribution"
             ]
@@ -1291,12 +1311,13 @@ def make_settings_blueprint(
             config_accessor.tile().hillshade_blend_mode = blend_mode
 
             config_accessor.save()
-            flasher.flash_message(_("Tile settings updated."), FlashTypes.SUCCESS)
+            if not error:
+                flasher.flash_message(_("Tile settings updated."), FlashTypes.SUCCESS)
         return render_template(
             "settings/tile-source.html.j2",
-            map_tile_url=config_accessor.map().map_tile_url,
+            map_tile_url=map_tile_url,
             map_tile_attribution=config_accessor.map().map_tile_attribution,
-            test_url=config_accessor.map().map_tile_url.format(zoom=14, x=8514, y=5504),
+            test_url=format_sample_tile_url(config_accessor.map().map_tile_url),
             hillshade_opacity=config_accessor.tile().hillshade_opacity,
             hillshade_blend_mode=config_accessor.tile().hillshade_blend_mode,
             hillshade_blend_modes=HILLSHADE_BLEND_MODES,

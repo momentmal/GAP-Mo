@@ -15,6 +15,9 @@
     <div class="mb-3">
         <label for="map_tile_url" class="form-label">{{ _('Map tile URL') }}</label>
         <input type="text" class="form-control" id="map_tile_url" name="map_tile_url" value="{{ map_tile_url }}" />
+        <div class="form-text">{{ _('The URL must contain the placeholders {zoom}, {x} and {y}. The widespread {z} is accepted as well and converted into {zoom}. Before saving, a sample tile is downloaded to verify that the tile source works.') }}
+            <a href="https://martin-ueding.github.io/geo-activity-playground/change-the-map-tile-source/"
+                target="_blank">{{ _('See the documentation on the map tile source.') }}</a></div>
     </div>
     <div class="mb-3">
         <label for="map_tile_attribution" class="form-label">{{ _('Map tile attribution') }}</label>
@@ -45,7 +48,11 @@
 
 <h2>{{ _('Test image') }}</h2>
 
+{% if test_url %}
 <p>{{ _('This is a tile using your current tile source:') }}</p>
 
 <p><img src="{{ test_url }}"></p>
+{% else %}
+<p>{{ _('The stored tile URL cannot be filled with tile coordinates, so no test image can be shown.') }}</p>
+{% endif %}
 {% endblock %}

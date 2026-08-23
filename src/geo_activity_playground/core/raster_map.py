@@ -1,9 +1,12 @@
 import abc
 import dataclasses
 import functools
+import io
 import logging
 import pathlib
+import string
 import time
+import typing
 import urllib.parse
 
 import numpy as np
@@ -19,6 +22,95 @@ logger = logging.getLogger(__name__)
 OSM_TILE_SIZE = 256  # OSM tile size in pixel
 OSM_MAX_ZOOM = 19  # OSM maximum zoom level
 MAX_TILE_COUNT = 2000  # maximum number of tiles to download
+
+USER_AGENT = "Martin's Geo Activity Playground"
+TILE_URL_PLACEHOLDERS = ("zoom", "x", "y")
+SAMPLE_TILE = {"zoom": 14, "x": 8514, "y": 5504}
+
+
+class TileDownloadError(RuntimeError):
+    pass
+
+
+def normalize_tile_url_template(url_template: str) -> str:
+    """Convert the common ``{z}`` placeholder into the ``{zoom}`` used internally."""
+    return url_template.replace("{z}", "{zoom}")
+
+
+def tile_url_template_error(url_template: str) -> str | None:
+    """Check the placeholders of a tile URL template without contacting the server."""
+    try:
+        fields = {
+            field
+            for _, field, _, _ in string.Formatter().parse(url_template)
+            if field is not None
+        }
+    except ValueError as e:
+        return f"The URL contains unbalanced braces: {e}"
+
+    missing = [name for name in TILE_URL_PLACEHOLDERS if name not in fields]
+    if missing:
+        return (
+            f"The URL is missing the placeholders {_format_placeholders(missing)}. "
+            f"It needs to contain {_format_placeholders(TILE_URL_PLACEHOLDERS)}."
+        )
+
+    unknown = sorted(fields - set(TILE_URL_PLACEHOLDERS))
+    if unknown:
+        return (
+            f"The URL contains the unknown placeholders {_format_placeholders(unknown)}. "
+            f"Only {_format_placeholders(TILE_URL_PLACEHOLDERS)} are supported."
+        )
+
+    return None
+
+
+def _format_placeholders(names: typing.Iterable[str]) -> str:
+    return ", ".join(f"{{{name}}}" for name in names)
+
+
+def format_sample_tile_url(url_template: str) -> str | None:
+    """Format a sample tile URL, returning ``None`` if the template is broken."""
+    try:
+        return url_template.format(**SAMPLE_TILE)
+    except (KeyError, IndexError, ValueError):
+        return None
+
+
+def probe_tile_url(url_template: str) -> str | None:
+    """Download a sample tile to see whether the tile source actually works."""
+    url = format_sample_tile_url(url_template)
+    if url is None:
+        return "The URL cannot be filled with the tile coordinates."
+
+    try:
+        r = requests.get(
+            url,
+            allow_redirects=True,
+            headers={"User-Agent": USER_AGENT},
+            timeout=30,
+        )
+    except requests.RequestException as e:
+        return f"The tile server could not be reached: {e}"
+
+    if not r.ok:
+        return (
+            f"The tile server responded with status {r.status_code}: {_body_excerpt(r)}"
+        )
+
+    try:
+        with Image.open(io.BytesIO(r.content)) as image:
+            image.load()
+    except OSError:
+        return f"The tile server did not send an image: {_body_excerpt(r)}"
+
+    return None
+
+
+def _body_excerpt(r: requests.Response, limit: int = 200) -> str:
+    body = " ".join(r.text.split())
+    return body[:limit] + "…" if len(body) > limit else body
+
 
 ## Basic data types ##
 
@@ -139,6 +231,8 @@ def get_tile(zoom: int, x: int, y: int, url_template: str) -> Image.Image:
     with Image.open(destination) as image:
         image.load()
         image = image.convert("RGB")
+    if image.size != (OSM_TILE_SIZE, OSM_TILE_SIZE):
+        image = image.resize((OSM_TILE_SIZE, OSM_TILE_SIZE), Image.LANCZOS)
     return image
 
 
@@ -238,9 +332,13 @@ def download_file(url: str, destination: pathlib.Path):
     r = requests.get(
         url,
         allow_redirects=True,
-        headers={"User-Agent": "Martin's Geo Activity Playground"},
+        headers={"User-Agent": USER_AGENT},
     )
-    assert r.ok
+    if not r.ok:
+        raise TileDownloadError(
+            f"Could not download tile from {url}, "
+            f"the server responded with status {r.status_code}: {_body_excerpt(r)}"
+        )
     with open(destination, "wb") as f:
         f.write(r.content)
     time.sleep(0.1)
