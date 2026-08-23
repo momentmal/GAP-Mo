@@ -68,6 +68,7 @@ export default withMermaid({
       {
         text: 'Maps & Plots',
         items: [
+          { text: 'Change the Map Tile Source', link: '/change-the-map-tile-source' },
           { text: 'Using Maps as Overlays', link: '/using-maps-as-overlays' },
           { text: 'Build Custom Plots', link: '/build-custom-plots' },
           { text: 'Create a Privacy Zone', link: '/create-a-privacy-zone' },
