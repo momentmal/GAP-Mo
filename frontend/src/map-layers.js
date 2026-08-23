@@ -1,5 +1,39 @@
 import L from "leaflet";
 
+const EARTH_CIRCUMFERENCE = 40075017;
+const HILLSHADE_EXAGGERATION = 1.5;
+
+function pixelSizeMeters(y, z, tileSize) {
+    const n = Math.PI - 2 * Math.PI * y / 2 ** z;
+    const latitude = Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+    return Math.max(0.1, EARTH_CIRCUMFERENCE / (tileSize * 2 ** z) * Math.cos(latitude));
+}
+
+/**
+ * Workaround for https://github.com/glandais/leaflet-relief/issues/94: the
+ * hillshade gradients are divided by a hardcoded 5 instead of the real
+ * meters-per-pixel, so the shading is exaggerated when zoomed out and fades
+ * away when zoomed in. Drop this once upstream scales by pixel size.
+ */
+function patchReliefHillshade() {
+    if (!(L.GridLayer && L.GridLayer.Relief)) {
+        return;
+    }
+    L.GridLayer.Relief.prototype._fillHillshadeTile = function (out, dem, coords, signal) {
+        const denominator = 8 * pixelSizeMeters(coords.y, coords.z, this.getTileSize().x)
+            / HILLSHADE_EXAGGERATION;
+        const { hillshadeA1: a1, hillshadeA2: a2, hillshadeA3: a3 } = this._state;
+        this._doFillTile(out, dem, (z) => {
+            const dzdx = (z[2] + 2 * z[5] + z[8] - (z[0] + 2 * z[3] + z[6])) / denominator;
+            const dzdy = (z[0] + 2 * z[1] + z[2] - (z[6] + 2 * z[7] + z[8])) / denominator;
+            const raw = (a1 - a2 * dzdx - a3 * dzdy) / Math.sqrt(1 + dzdx ** 2 + dzdy ** 2);
+            const intensity = Math.sqrt(Math.max(0, raw) * 0.8 + 0.2);
+            const [r, g, b] = this.options.hillshadeColorFunction(intensity);
+            return [r, g, b, 255];
+        }, signal);
+    };
+}
+
 /**
  * Adds base and overlay tile layers to a Leaflet map with layer control.
  * 
@@ -89,6 +123,8 @@ export function add_layers_to_map(map, config) {
     if (!(L.gridLayer && L.gridLayer.relief)) {
         console.error("leaflet-relief is required for Mapterhorn hillshade but is not available.");
     }
+
+    patchReliefHillshade();
 
     const historyParam = Number.isInteger(historyEventIndex)
         ? `&event_index=${historyEventIndex}`
