@@ -28,7 +28,7 @@ Changed:
 Fixed:
 
 - Fix internal server error on the equipment overview page when an equipment has no activities yet. ([GH-503](https://github.com/martin-ueding/geo-activity-playground/issues/503))
-
+- Fix "what's new" link on the main page pointing to a 404. ([GH-505](https://github.com/martin-ueding/geo-activity-playground/issues/505))
 
 ## Version 1.52.0 — 2026-08-29
 
