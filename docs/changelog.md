@@ -22,18 +22,18 @@ Types of changes
 
 Added:
 
-- The emoji summary of an activity states how many tiles it discovered, with one square emoji per explorer zoom level. ([GH-497](https://github.com/martin-ueding/geo-activity-playground/issues/497))
+- Show how many tiles an activity discovered in its emoji summary, with one square emoji per explorer zoom level. ([GH-497](https://github.com/martin-ueding/geo-activity-playground/issues/497))
 
 Changed:
 
-- The cumulative-per-year charts color the years on an ordinal viridis scale, so the current year stands out against the earlier ones. ([GH-496](https://github.com/martin-ueding/geo-activity-playground/issues/496))
-- The tile downloads below the explorer map are grouped by explored, missing and inaccessible tiles, with one button per file format. ([GH-498](https://github.com/martin-ueding/geo-activity-playground/issues/498))
-- `leaflet-relief` is updated to 1.7.0, which scales the hillshade gradients itself. The local monkey patch is removed. ([GH-500](https://github.com/martin-ueding/geo-activity-playground/issues/500))
+- Color the years in the cumulative-per-year charts on an ordinal viridis scale, so the current year stands out against the earlier ones. ([GH-496](https://github.com/martin-ueding/geo-activity-playground/issues/496))
+- Group the tile downloads below the explorer map by explored, missing and inaccessible tiles, with one button per file format. ([GH-498](https://github.com/martin-ueding/geo-activity-playground/issues/498))
+- Update `leaflet-relief` to 1.7.0, which scales the hillshade gradients itself, and remove the local monkey patch. ([GH-500](https://github.com/martin-ueding/geo-activity-playground/issues/500))
 
 Fixed:
 
-- The elevation Eddington number is shown as the number of days, not as the elevation gain. ([GH-501](https://github.com/martin-ueding/geo-activity-playground/issues/501))
-- The yearly elevation Eddington number no longer shows NaN when every day of the year meets its elevation threshold. ([GH-502](https://github.com/martin-ueding/geo-activity-playground/issues/502))
+- Show the elevation Eddington number as the number of days, not as the elevation gain. ([GH-501](https://github.com/martin-ueding/geo-activity-playground/issues/501))
+- Fix the yearly elevation Eddington number showing NaN when every day of the year meets its elevation threshold. ([GH-502](https://github.com/martin-ueding/geo-activity-playground/issues/502))
 
 
 ## Version 1.51.0 — 2026-08-23
