@@ -56,20 +56,29 @@
         </div>
         <p id="cluster-history-status" class="text-muted small mb-2"></p>
         <div id="explorer-map" class="mb-1" style="height: min(800px, calc(100vh - 300px));"></div>
-        <p>{{ _('Download tiles in visible area:') }}
-            <a href="#" data-download-suffix="explored.geojson">{{ _('Explored as GeoJSON') }}</a>,
-            <a href="#" data-download-suffix="explored.gpx">{{ _('Explored as GPX') }}</a>,
-            <a href="#" data-download-suffix="explored.kml">{{ _('Explored as KML') }}</a>,
-            {% if mkgmap_available %}<a href="#" data-download-suffix="explored.img">{{ _('Explored as Garmin map') }}</a>,{% endif %}
-            <a href="#" data-download-suffix="missing.geojson">{{ _('Missing as GeoJSON') }}</a>,
-            <a href="#" data-download-suffix="missing.gpx">{{ _('Missing as GPX') }}</a> {{ _('or') }}
-            <a href="#" data-download-suffix="missing.kml">{{ _('Missing as KML') }}</a>{% if mkgmap_available %} {{ _('or') }}
-            <a href="#" data-download-suffix="missing.img">{{ _('Missing as Garmin map') }}</a>{% endif %},
-            <a href="#" data-download-suffix="inaccessible.geojson">{{ _('Inaccessible as GeoJSON') }}</a>,
-            <a href="#" data-download-suffix="inaccessible.gpx">{{ _('Inaccessible as GPX') }}</a> {{ _('or') }}
-            <a href="#" data-download-suffix="inaccessible.kml">{{ _('Inaccessible as KML') }}</a>.
-        </p>
-        <p>{{ _('Export all explored tiles as a <a href="%(url)s">Squadrats-compatible KML</a> (zoom 14 and 17) for import into the Explorer Tile Helper app.', url=url_for('.download_squadrats'))|safe }}</p>
+        <p class="mb-2">{{ _('Download tiles in visible area:') }}</p>
+        {% set download_groups = [
+            (_('Explored'), 'explored', mkgmap_available),
+            (_('Missing'), 'missing', mkgmap_available),
+            (_('Inaccessible'), 'inaccessible', false),
+        ] %}
+        <div class="btn-toolbar gap-2 mb-3" role="toolbar" aria-label="{{ _('Tile downloads') }}">
+            {% for label, kind, garmin in download_groups %}
+            <div class="input-group input-group-sm w-auto">
+                <span class="input-group-text">{{ label }}</span>
+                <a href="#" class="btn btn-outline-primary" data-download-suffix="{{ kind }}.geojson">{{ _('GeoJSON') }}</a>
+                <a href="#" class="btn btn-outline-primary" data-download-suffix="{{ kind }}.gpx">{{ _('GPX') }}</a>
+                <a href="#" class="btn btn-outline-primary" data-download-suffix="{{ kind }}.kml">{{ _('KML') }}</a>
+                {% if garmin %}
+                <a href="#" class="btn btn-outline-primary" data-download-suffix="{{ kind }}.img">{{ _('Garmin map') }}</a>
+                {% endif %}
+                {% if kind == 'explored' %}
+                <a href="{{ url_for('.download_squadrats') }}" class="btn btn-outline-primary"
+                    title="{{ _('All explored tiles at zoom 14 and 17 as a Squadrats-compatible KML for the Explorer Tile Helper app, independent of the visible area.') }}">{{ _('Squadrats KML') }}</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
         <script type="module">
             import { initExplorerMap } from '/static/dist/server-side-explorer.js';
             initExplorerMap({
