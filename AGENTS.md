@@ -24,6 +24,9 @@ Reason: Duplicated code has a cognitive burden.
 
 Rule: Document changes in the `docs/changelog.md` in the `## Unreleased` section.
 
+Rule: Changelog entries use imperative style.
+Example: "Gracefully handle case when no activity kinds are considered for achievements but no prior tiles have been extracted."
+
 Rule: Changelog entries use the sections defined at the beginning of the file.
 
 Rule: Changelog entries go into separate `docs:` commits.
