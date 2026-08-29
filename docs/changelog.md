@@ -27,6 +27,10 @@ Changed:
 - The tile downloads below the explorer map are grouped by explored, missing and inaccessible tiles, with one button per file format. ([GH-498](https://github.com/martin-ueding/geo-activity-playground/issues/498))
 - `leaflet-relief` is updated to 1.7.0, which scales the hillshade gradients itself. The local monkey patch is removed. ([GH-500](https://github.com/martin-ueding/geo-activity-playground/issues/500))
 
+Fixed:
+
+- The elevation Eddington number is shown as the number of days, not as the elevation gain. ([GH-501](https://github.com/martin-ueding/geo-activity-playground/issues/501))
+
 
 ## Version 1.51.0 — 2026-08-23
 
