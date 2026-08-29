@@ -17,6 +17,10 @@ Types of changes
 
 ## Unreleased
 
+Added:
+
+- Add opt-in settings to apply privacy zones to activity tracks everywhere, and separately to the heatmap. Both default to off. ([GH-504](https://github.com/martin-ueding/geo-activity-playground/issues/504))
+
 Fixed:
 
 - Fix internal server error on the equipment overview page when an equipment has no activities yet. ([GH-503](https://github.com/martin-ueding/geo-activity-playground/issues/503))
