@@ -24,6 +24,7 @@ Added:
 Changed:
 
 - The cumulative-per-year charts color the years on an ordinal viridis scale, so the current year stands out against the earlier ones. ([GH-496](https://github.com/martin-ueding/geo-activity-playground/issues/496))
+- The tile downloads below the explorer map are grouped by explored, missing and inaccessible tiles, with one button per file format. ([GH-498](https://github.com/martin-ueding/geo-activity-playground/issues/498))
 
 
 ## Version 1.51.0 — 2026-08-23
