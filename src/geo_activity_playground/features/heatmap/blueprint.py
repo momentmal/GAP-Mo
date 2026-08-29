@@ -15,7 +15,13 @@ from flask_babel import gettext as _
 from PIL import Image, ImageDraw
 
 from ...core.config import ConfigAccessor
-from ...core.datamodel import DB, StoredSearchQuery, UiConfig, get_time_series
+from ...core.datamodel import (
+    DB,
+    PrivacyZone,
+    StoredSearchQuery,
+    UiConfig,
+    get_time_series,
+)
 from ...core.grid import geojson_bounding_box_for_tile_collection
 from ...core.meta_search import (
     apply_search_filter,
@@ -33,7 +39,7 @@ from ...core.tile_visits import (
     get_activity_ids_in_tile,
     get_tile_medians,
 )
-from ...core.tiles import get_tile_upper_left_lat_lon
+from ...core.tiles import compute_tile_float, get_tile_upper_left_lat_lon
 from ...webui.authenticator import Authenticator, needs_authentication
 from ...webui.flasher import Flasher, FlashTypes
 from ...webui.search_context import search_context
@@ -380,6 +386,30 @@ def _paint_activity(
         tile_counts += aim
 
 
+def _privacy_zone_pixel_mask(x: int, y: int, z: int) -> np.ndarray | None:
+    """Boolean mask, True where the pixel falls inside a privacy zone.
+
+    Computed from the raw zone polygons rather than baked into the heatmap
+    cache, so that the cache doesn't need to be invalidated when zones or
+    the privacy toggle change.
+    """
+    privacy_zones = DB.session.scalars(sqlalchemy.select(PrivacyZone)).all()
+    if not privacy_zones:
+        return None
+    tile_pixels = (OSM_TILE_SIZE, OSM_TILE_SIZE)
+    im = Image.new("L", tile_pixels)
+    draw = ImageDraw.Draw(im)
+    for privacy_zone in privacy_zones:
+        lon = [point[0] for point in privacy_zone.points]
+        lat = [point[1] for point in privacy_zone.points]
+        tile_x, tile_y = compute_tile_float(np.array(lat), np.array(lon), z)
+        pixel_coords = list(
+            zip((tile_x - x) * OSM_TILE_SIZE, (tile_y - y) * OSM_TILE_SIZE)
+        )
+        draw.polygon(pixel_coords, fill=1)
+    return np.array(im, dtype=bool)
+
+
 def _render_tile_image(
     x: int,
     y: int,
@@ -390,6 +420,11 @@ def _render_tile_image(
     tile_pixels = (OSM_TILE_SIZE, OSM_TILE_SIZE)
     tile_counts = np.zeros(tile_pixels)
     tile_counts += _get_counts(x, y, z, primitives, config)
+
+    if config.apply_privacy_zones_to_heatmap:
+        mask = _privacy_zone_pixel_mask(x, y, z)
+        if mask is not None:
+            tile_counts[mask] = 0
 
     tile_counts = np.sqrt(tile_counts) / 5
     tile_counts[tile_counts > 1.0] = 1.0

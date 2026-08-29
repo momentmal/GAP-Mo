@@ -6,7 +6,11 @@ from flask import Blueprint, render_template
 
 from ...core.activities import make_geojson_from_time_series
 from ...core.config import ConfigAccessor
-from ...core.datamodel import get_activity_by_id, get_time_series
+from ...core.datamodel import (
+    apply_privacy_zones_to_tracks_if_enabled,
+    get_activity_by_id,
+    get_time_series,
+)
 from ...core.meta_search import apply_search_filter
 from ...webui.authenticator import Authenticator
 from ...webui.search_context import search_context
@@ -37,7 +41,9 @@ def make_hall_of_fame_blueprint(
                     get_activity_by_id(activity_id),
                     reasons,
                     make_geojson_from_time_series(
-                        get_time_series(activity_id),
+                        apply_privacy_zones_to_tracks_if_enabled(
+                            get_time_series(activity_id), config
+                        ),
                         config.eighth_marker_min_distance_km,
                     ),
                 )

@@ -1,13 +1,11 @@
 import datetime
 
-import sqlalchemy
 from flask import Blueprint, Response
 from flask.typing import ResponseReturnValue
 
 from ...core.config import ConfigAccessor
 from ...core.datamodel import (
-    DB,
-    PrivacyZone,
+    apply_privacy_zones,
     get_activity_by_id,
     get_time_series,
     query_activity_meta,
@@ -21,9 +19,7 @@ def make_sharepic_blueprint(config_accessor: ConfigAccessor) -> Blueprint:
     @blueprint.route("/activity/<int:id>.png")
     def activity(id: int) -> ResponseReturnValue:
         activity = get_activity_by_id(id)
-        time_series = get_time_series(id)
-        for privacy_zone in DB.session.scalars(sqlalchemy.select(PrivacyZone)).all():
-            time_series = privacy_zone.filter_time_series(time_series)
+        time_series = apply_privacy_zones(get_time_series(id))
         if len(time_series) == 0:
             time_series = get_time_series(id)
         return Response(

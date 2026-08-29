@@ -16,6 +16,7 @@ from ...core.datamodel import (
     DB,
     Activity,
     TileVisit,
+    apply_privacy_zones_to_tracks_if_enabled,
     get_time_series,
     query_activity_meta,
 )
@@ -407,8 +408,12 @@ def make_calendar_blueprint(
         selection = meta["start_local"].dt.date == datetime.date(year, month, day)
         activities_that_day = meta.loc[selection]
 
+        ui_config = config_accessor.ui()
         time_series = [
-            get_time_series(activity_id) for activity_id in activities_that_day["id"]
+            apply_privacy_zones_to_tracks_if_enabled(
+                get_time_series(activity_id), ui_config
+            )
+            for activity_id in activities_that_day["id"]
         ]
 
         cmap = matplotlib.colormaps["Dark2"]

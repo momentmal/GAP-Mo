@@ -849,6 +849,12 @@ class UiConfig(DB.Model):
     currency: Mapped[str] = mapped_column(
         sa.String, nullable=False, default="", server_default=""
     )
+    apply_privacy_zones_to_tracks: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, default=False, server_default=sa.false()
+    )
+    apply_privacy_zones_to_heatmap: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, default=False, server_default=sa.false()
+    )
 
 
 class MapConfig(DB.Model):
@@ -895,6 +901,20 @@ class PrivacyZone(DB.Model):
             )
         ]
         return time_series.loc[mask]
+
+
+def apply_privacy_zones(time_series: pd.DataFrame) -> pd.DataFrame:
+    for privacy_zone in DB.session.scalars(sqlalchemy.select(PrivacyZone)).all():
+        time_series = privacy_zone.filter_time_series(time_series)
+    return time_series
+
+
+def apply_privacy_zones_to_tracks_if_enabled(
+    time_series: pd.DataFrame, ui_config: UiConfig
+) -> pd.DataFrame:
+    if not ui_config.apply_privacy_zones_to_tracks:
+        return time_series
+    return apply_privacy_zones(time_series)
 
 
 class DatabaseMaintenanceState(DB.Model):

@@ -969,10 +969,18 @@ def make_settings_blueprint(
     @blueprint.route("/privacy-zones", methods=["GET", "POST"])
     @needs_authentication(authenticator)
     def privacy_zones():
+        ui_config = config_accessor.ui()
         if request.method == "POST":
             zone_names = request.form.getlist("zone_name")
             zone_geojsons = request.form.getlist("zone_geojson")
             save_privacy_zones(zone_names, zone_geojsons)
+            ui_config.apply_privacy_zones_to_tracks = (
+                request.form.get("apply_privacy_zones_to_tracks") == "on"
+            )
+            ui_config.apply_privacy_zones_to_heatmap = (
+                request.form.get("apply_privacy_zones_to_heatmap") == "on"
+            )
+            config_accessor.save()
             flash("Updated privacy zones.", category="success")
 
         context = {
@@ -981,7 +989,9 @@ def make_settings_blueprint(
                 for zone in DB.session.scalars(
                     sqlalchemy.select(PrivacyZone).order_by(PrivacyZone.name)
                 ).all()
-            }
+            },
+            "apply_privacy_zones_to_tracks": ui_config.apply_privacy_zones_to_tracks,
+            "apply_privacy_zones_to_heatmap": ui_config.apply_privacy_zones_to_heatmap,
         }
         return render_template("settings/privacy-zones.html.j2", **context)
 

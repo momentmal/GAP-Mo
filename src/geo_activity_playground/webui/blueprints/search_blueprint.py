@@ -11,7 +11,12 @@ from matplotlib import colormaps
 from matplotlib.colors import to_hex
 
 from ...core.config import ConfigAccessor
-from ...core.datamodel import DB, Activity, StoredSearchQuery
+from ...core.datamodel import (
+    DB,
+    Activity,
+    StoredSearchQuery,
+    apply_privacy_zones_to_tracks_if_enabled,
+)
 from ...core.meta_search import (
     apply_search_filter,
     parse_search_params,
@@ -110,6 +115,7 @@ def make_search_blueprint(
         activities = apply_search_filter(primitives).iloc[::-1]
         activity_ids = activities["id"].head(aggregate_map_activity_cap).tolist()
         rank = {activity_id: i for i, activity_id in enumerate(activity_ids)}
+        ui_config = config_accessor.ui()
         features = []
         cmap = colormaps["Dark2"]
         for activity in sorted(
@@ -118,7 +124,9 @@ def make_search_blueprint(
             ).all(),
             key=lambda activity: rank[activity.id],
         ):
-            time_series = activity.time_series
+            time_series = apply_privacy_zones_to_tracks_if_enabled(
+                activity.time_series, ui_config
+            )
             if "latitude" not in time_series or "longitude" not in time_series:
                 continue
             grouped = (

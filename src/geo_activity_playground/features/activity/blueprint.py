@@ -35,6 +35,7 @@ from ...core.datamodel import (
     Equipment,
     Kind,
     Tag,
+    apply_privacy_zones_to_tracks_if_enabled,
     get_activity_by_id,
     get_or_make_equipment,
     get_or_make_kind,
@@ -118,6 +119,7 @@ def make_activity_blueprint(
 
     @blueprint.route("/all")
     def all() -> ResponseReturnValue:
+        ui_config = config_accessor.ui()
         cmap = matplotlib.colormaps["Dark2"]
         fc = geojson.FeatureCollection(
             features=[
@@ -130,9 +132,9 @@ def make_activity_blueprint(
                                     group["latitude"], group["longitude"]
                                 )
                             ]
-                            for _, group in get_time_series(activity.id).groupby(
-                                "segment_id"
-                            )
+                            for _, group in apply_privacy_zones_to_tracks_if_enabled(
+                                get_time_series(activity.id), ui_config
+                            ).groupby("segment_id")
                         ]
                     ),
                     properties={
@@ -156,7 +158,9 @@ def make_activity_blueprint(
         tile_styles = get_tile_styles()
         activity = get_activity_by_id(id)
 
-        time_series = get_time_series(id)
+        time_series = apply_privacy_zones_to_tracks_if_enabled(
+            get_time_series(id), config
+        )
         line_json = make_geojson_from_time_series(
             time_series, config.eighth_marker_min_distance_km
         )
@@ -285,9 +289,12 @@ def make_activity_blueprint(
 
     @blueprint.route("/<int:id>/line.geojson")
     def geojson_line(id: int) -> ResponseReturnValue:
+        ui_config = config_accessor.ui()
         return make_geojson_from_time_series(
-            DB.session.get_one(Activity, id).time_series,
-            config_accessor.ui().eighth_marker_min_distance_km,
+            apply_privacy_zones_to_tracks_if_enabled(
+                DB.session.get_one(Activity, id).time_series, ui_config
+            ),
+            ui_config.eighth_marker_min_distance_km,
         )
 
     @blueprint.route("/name/<name>")
@@ -296,8 +303,12 @@ def make_activity_blueprint(
         selection = meta["name"] == name
         activities_with_name = meta.loc[selection]
 
+        ui_config = config_accessor.ui()
         time_series = [
-            get_time_series(activity_id) for activity_id in activities_with_name["id"]
+            apply_privacy_zones_to_tracks_if_enabled(
+                get_time_series(activity_id), ui_config
+            )
+            for activity_id in activities_with_name["id"]
         ]
 
         cmap = matplotlib.colormaps["Dark2"]

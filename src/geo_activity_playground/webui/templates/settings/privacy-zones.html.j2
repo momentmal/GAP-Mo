@@ -23,6 +23,21 @@
 
 
 <form method="POST">
+    <h2 class="mb-3">{{ _("Apply privacy zones") }}</h2>
+
+    <p>{{ _("By default, privacy zones only affect the generated share images. Opt in below to also apply them elsewhere, at the cost of gaps in the track wherever it enters a privacy zone.") }}</p>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="apply_privacy_zones_to_tracks"
+            name="apply_privacy_zones_to_tracks" {{ 'checked' if apply_privacy_zones_to_tracks else '' }} />
+        <label class="form-check-label" for="apply_privacy_zones_to_tracks">{{ _("Apply privacy zones to activity tracks everywhere") }}</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="apply_privacy_zones_to_heatmap"
+            name="apply_privacy_zones_to_heatmap" {{ 'checked' if apply_privacy_zones_to_heatmap else '' }} />
+        <label class="form-check-label" for="apply_privacy_zones_to_heatmap">{{ _("Apply privacy zones to the heatmap") }}</label>
+    </div>
+
     {% if privacy_zones %}
     <h2 class="mb-3">Existing zones</h2>
 
