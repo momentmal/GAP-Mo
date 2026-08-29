@@ -17,6 +17,7 @@ from geo_activity_playground.core.datamodel import (
     Activity,
     Equipment,
     Kind,
+    PrivacyZone,
     TileVisit,
 )
 
@@ -58,6 +59,14 @@ def samples(seeded_app: Flask) -> dict[str, object]:
         equipment = DB.session.scalar(sqlalchemy.select(Equipment).limit(1))
         kind = DB.session.scalar(sqlalchemy.select(Kind).limit(1))
         assert equipment is not None and kind is not None
+        privacy_zone = DB.session.scalar(sqlalchemy.select(PrivacyZone).limit(1))
+        if privacy_zone is None:
+            privacy_zone = PrivacyZone(
+                name="Test zone",
+                points=[[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]],
+            )
+            DB.session.add(privacy_zone)
+            DB.session.commit()
         time_series = activity.time_series
         start: dt.datetime = activity.start
 
@@ -66,6 +75,7 @@ def samples(seeded_app: Flask) -> dict[str, object]:
             "activity_name": activity.name,
             "equipment_id": equipment.id,
             "kind_id": kind.id,
+            "privacy_zone_id": privacy_zone.id,
             "year": start.year,
             "month": start.month,
             "day": start.day,
@@ -90,6 +100,7 @@ ID_SAMPLES = {
     "equipment.edit": "equipment_id",
     "equipment.show": "equipment_id",
     "settings.kinds_edit": "kind_id",
+    "settings.privacy_zones_edit": "privacy_zone_id",
     "sharepic.activity": "activity_id",
 }
 
