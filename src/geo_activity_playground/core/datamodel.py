@@ -23,6 +23,10 @@ from .paths import (
 
 logger = logging.getLogger(__name__)
 
+# Squares from large to small, so that a lower zoom level with its larger tiles
+# gets the visually larger emoji.
+_TILE_EMOJI = ["🟨", "◼️", "◽", "▪️"]
+
 
 DEFAULT_UNKNOWN_NAME = "Unknown"
 
@@ -213,7 +217,28 @@ class Activity(DB.Model):
             bits.append(f"🍭 {self.calories} kcal")
         if self.steps:
             bits.append(f"👣 {self.steps}")
+        counts = self.new_tile_counts
+        ui_config = DB.session.get(UiConfig, 1)
+        zoom_levels = sorted(ui_config.explorer_zoom_levels) if ui_config else []
+        bits.extend(
+            f"{_TILE_EMOJI[min(index, len(_TILE_EMOJI) - 1)]} {counts[zoom]}"
+            for index, zoom in enumerate(zoom_levels)
+            if counts.get(zoom)
+        )
         return " ".join(bits)
+
+    @property
+    def new_tile_counts(self) -> dict[int, int]:
+        """Number of tiles first visited by this activity, per zoom level."""
+        return {
+            row.zoom: row.count
+            for row in DB.session.execute(
+                sa.select(TileVisit.zoom, sa.func.count().label("count"))
+                .where(TileVisit.first_activity_id == self.id)
+                .group_by(TileVisit.zoom)
+                .order_by(TileVisit.zoom)
+            )
+        }
 
     def delete_data(self) -> None:
         for path in [
