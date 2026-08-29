@@ -17,6 +17,10 @@ Types of changes
 
 ## Unreleased
 
+Added:
+
+- The emoji summary of an activity states how many tiles it discovered, with one square emoji per explorer zoom level. ([GH-497](https://github.com/martin-ueding/geo-activity-playground/issues/497))
+
 Changed:
 
 - The cumulative-per-year charts color the years on an ordinal viridis scale, so the current year stands out against the earlier ones. ([GH-496](https://github.com/martin-ueding/geo-activity-playground/issues/496))
