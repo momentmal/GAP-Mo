@@ -17,6 +17,10 @@ Types of changes
 
 ## Unreleased
 
+Changed:
+
+- The cumulative-per-year charts color the years on an ordinal viridis scale, so the current year stands out against the earlier ones. ([GH-496](https://github.com/martin-ueding/geo-activity-playground/issues/496))
+
 
 ## Version 1.51.0 — 2026-08-23
 
