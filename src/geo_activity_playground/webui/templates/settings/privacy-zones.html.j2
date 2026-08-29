@@ -10,23 +10,15 @@
 <p>You might want to remove points that are close to your home, work or relatives. For this you can define
     arbitrary polygons as "privacy zones". Go to <a href="https://geojson.io/" target="_blank">GeoJSON.io</a> to have a
     nice interactive tool for creating overlays. Create a single polygon, rectangle or circle to define a privacy zone.
-    You can define as many zones as you want, but each zone must only consist of a single area. When you are done, copy
-    the JSON output from the left into the text box below.</p>
-
-<p>You can change the name on an existing privacy zone. To delete a zone, delete the name or the GeoJSON. Zones without
-    a name will be deleted.</p>
+    Each zone must only consist of a single area.</p>
 
 <p>For more information about how to use this feature see <a href="https://martin-ueding.github.io/geo-activity-playground/create-a-privacy-zone/" target="_blank">this page in the documentation</a></p>
 
-{{ map_script() }}
+<h2 class="mb-3">{{ _("Apply privacy zones") }}</h2>
 
-
+<p>{{ _("By default, privacy zones only affect the generated share images. Opt in below to also apply them elsewhere, at the cost of gaps in the track wherever it enters a privacy zone.") }}</p>
 
 <form method="POST">
-    <h2 class="mb-3">{{ _("Apply privacy zones") }}</h2>
-
-    <p>{{ _("By default, privacy zones only affect the generated share images. Opt in below to also apply them elsewhere, at the cost of gaps in the track wherever it enters a privacy zone.") }}</p>
-
     <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" role="switch" id="apply_privacy_zones_to_tracks"
             name="apply_privacy_zones_to_tracks" {{ 'checked' if apply_privacy_zones_to_tracks else '' }} />
@@ -38,48 +30,37 @@
         <label class="form-check-label" for="apply_privacy_zones_to_heatmap">{{ _("Apply privacy zones to the heatmap") }}</label>
     </div>
 
-    {% if privacy_zones %}
-    <h2 class="mb-3">Existing zones</h2>
-
-    <div class="row row-cols-1 row-cols-lg-3 g-4 mb-3">
-        {% for zone_name, zone_geojson in privacy_zones.items() %}
-
-        <div class="col">
-            <div class="mb-3">
-                <label for="zone_name_{{ loop.index }}" class="form-label">Name</label>
-                <input type="text" class="form-control" id="zone_name_{{ loop.index }}" name="zone_name"
-                    value="{{ zone_name }}" />
-            </div>
-            <div class="mb-3">
-                <label for="zone_geojson_{{ loop.index }}" class="form-label">GeoJSON</label>
-                <textarea class="form-control" id="zone_geojson_{{ loop.index }}" name="zone_geojson"
-                    rows="10">{{ zone_geojson|tojson(indent=2) }}</textarea>
-            </div>
-            <div class="card-img-top" id="map-{{ loop.index }}" style="height: 300px; width: 100%;"></div>
-            <script type="module">
-                add_map("map-{{ loop.index }}", {{ zone_geojson | safe }})
-            </script>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <h2 class="mb-3">New zone</h2>
-
-    <div class="row mb-3">
-        <div class="col-lg-4">
-            <div class="mb-3">
-                <label for="new_zone_name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="new_zone_name" name="zone_name" />
-            </div>
-            <div class="mb-3">
-                <label for="new_zone_geojson" class="form-label">GeoJSON</label>
-                <textarea class="form-control" id="new_zone_geojson" name="zone_geojson" rows="10"></textarea>
-            </div>
-
-        </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
 </form>
+
+<h2 class="mb-3 mt-4">{{ _("Zones") }}</h2>
+
+{{ map_script() }}
+
+{% if zones %}
+<div class="row row-cols-1 row-cols-lg-3 g-4 mb-3">
+    {% for zone in zones %}
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-img-top" id="map-zone-{{ zone.id }}" style="height: 250px; width: 100%;"></div>
+            <script type="module">
+                add_map("map-zone-{{ zone.id }}", {{ zone_geojsons[zone.id] | safe }})
+            </script>
+            <div class="card-body">
+                <h5 class="card-title">{{ zone.name }}</h5>
+                <a class="btn btn-sm btn-primary" href="{{ url_for('.privacy_zones_edit', id=zone.id) }}">{{ _("Edit") }}</a>
+                <form method="post" action="{{ url_for('.privacy_zones_delete', id=zone.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="if(!confirm('{{ _('Are you sure you want to delete this privacy zone?') }}')){event.preventDefault()}">{{ _("Delete") }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">{{ _("No privacy zones defined yet.") }}</p>
+{% endif %}
+
+<a class="btn btn-primary" href="{{ url_for('.privacy_zones_new') }}">{{ _("New Privacy Zone") }}</a>
 {% endblock %}

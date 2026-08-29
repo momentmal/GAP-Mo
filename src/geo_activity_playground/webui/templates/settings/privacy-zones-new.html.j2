@@ -1,0 +1,26 @@
+{% extends "settings/base.html.j2" %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{{ url_for('.privacy_zones') }}">Privacy Zones</a></li>
+<li class="breadcrumb-item active" aria-current="page">New</li>
+{% endblock %}
+
+{% block settings_content %}
+<h1 class="mb-3">{{ _("New Privacy Zone") }}</h1>
+
+<p>{{ _("Go to") }} <a href="https://geojson.io/" target="_blank">GeoJSON.io</a> {{ _("to create a polygon, rectangle or circle. When you are done, copy the JSON output from the left into the text box below.") }}</p>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="name" class="form-label">{{ _("Name") }}</label>
+        <input type="text" class="form-control" id="name" name="name" required />
+    </div>
+    <div class="mb-3">
+        <label for="geojson" class="form-label">{{ _("GeoJSON") }}</label>
+        <textarea class="form-control" id="geojson" name="geojson" rows="10" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+    <a href="{{ url_for('.privacy_zones') }}" class="btn btn-secondary">{{ _("Cancel") }}</a>
+</form>
+{% endblock %}

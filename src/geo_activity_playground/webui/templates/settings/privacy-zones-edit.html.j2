@@ -1,0 +1,30 @@
+{% extends "settings/base.html.j2" %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{{ url_for('.privacy_zones') }}">Privacy Zones</a></li>
+<li class="breadcrumb-item active" aria-current="page">Edit</li>
+{% endblock %}
+
+{% block settings_content %}
+<h1 class="mb-3">{{ _("Edit Privacy Zone") }}</h1>
+
+{{ map_script() }}
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="name" class="form-label">{{ _("Name") }}</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ zone.name }}" required />
+    </div>
+    <div class="mb-3">
+        <label for="geojson" class="form-label">{{ _("GeoJSON") }}</label>
+        <textarea class="form-control" id="geojson" name="geojson" rows="10" required>{{ zone_geojson|tojson(indent=2) }}</textarea>
+    </div>
+    <div class="card-img-top mb-3" id="map-zone-{{ zone.id }}" style="height: 300px; width: 100%;"></div>
+    <script type="module">
+        add_map("map-zone-{{ zone.id }}", {{ zone_geojson | safe }})
+    </script>
+
+    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+    <a href="{{ url_for('.privacy_zones') }}" class="btn btn-secondary">{{ _("Cancel") }}</a>
+</form>
+{% endblock %}

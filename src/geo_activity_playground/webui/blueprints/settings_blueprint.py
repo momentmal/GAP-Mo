@@ -971,9 +971,6 @@ def make_settings_blueprint(
     def privacy_zones():
         ui_config = config_accessor.ui()
         if request.method == "POST":
-            zone_names = request.form.getlist("zone_name")
-            zone_geojsons = request.form.getlist("zone_geojson")
-            save_privacy_zones(zone_names, zone_geojsons)
             ui_config.apply_privacy_zones_to_tracks = (
                 request.form.get("apply_privacy_zones_to_tracks") == "on"
             )
@@ -981,19 +978,103 @@ def make_settings_blueprint(
                 request.form.get("apply_privacy_zones_to_heatmap") == "on"
             )
             config_accessor.save()
-            flash("Updated privacy zones.", category="success")
+            flasher.flash_message(
+                _("Updated privacy zone settings."), FlashTypes.SUCCESS
+            )
+            return redirect(url_for(".privacy_zones"))
 
-        context = {
-            "privacy_zones": {
-                zone.name: _wrap_coordinates(zone.points)
-                for zone in DB.session.scalars(
-                    sqlalchemy.select(PrivacyZone).order_by(PrivacyZone.name)
-                ).all()
-            },
-            "apply_privacy_zones_to_tracks": ui_config.apply_privacy_zones_to_tracks,
-            "apply_privacy_zones_to_heatmap": ui_config.apply_privacy_zones_to_heatmap,
-        }
-        return render_template("settings/privacy-zones.html.j2", **context)
+        zones = DB.session.scalars(
+            sqlalchemy.select(PrivacyZone).order_by(PrivacyZone.name)
+        ).all()
+        return render_template(
+            "settings/privacy-zones.html.j2",
+            zones=zones,
+            zone_geojsons={zone.id: _wrap_coordinates(zone.points) for zone in zones},
+            apply_privacy_zones_to_tracks=ui_config.apply_privacy_zones_to_tracks,
+            apply_privacy_zones_to_heatmap=ui_config.apply_privacy_zones_to_heatmap,
+        )
+
+    @blueprint.route("/privacy-zones/new", methods=["GET", "POST"])
+    @needs_authentication(authenticator)
+    def privacy_zones_new():
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            geojson_str = request.form.get("geojson", "").strip()
+            if not name:
+                flasher.flash_message(_("Zone name is required."), FlashTypes.DANGER)
+                return redirect(url_for(".privacy_zones_new"))
+            if DB.session.scalar(
+                sqlalchemy.select(PrivacyZone).where(PrivacyZone.name == name)
+            ):
+                flasher.flash_message(
+                    _("A privacy zone named '%(name)s' already exists.", name=name),
+                    FlashTypes.DANGER,
+                )
+                return redirect(url_for(".privacy_zones_new"))
+
+            points = _parse_zone_geojson(name, geojson_str, flasher)
+            if points is None:
+                return redirect(url_for(".privacy_zones_new"))
+
+            DB.session.add(PrivacyZone(name=name, points=points))
+            DB.session.commit()
+            flasher.flash_message(
+                _("Privacy zone '%(name)s' added.", name=name), FlashTypes.SUCCESS
+            )
+            return redirect(url_for(".privacy_zones"))
+
+        return render_template("settings/privacy-zones-new.html.j2")
+
+    @blueprint.route("/privacy-zones/edit/<int:id>", methods=["GET", "POST"])
+    @needs_authentication(authenticator)
+    def privacy_zones_edit(id: int):
+        zone = DB.session.get_one(PrivacyZone, id)
+
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            geojson_str = request.form.get("geojson", "").strip()
+            if not name:
+                flasher.flash_message(_("Zone name is required."), FlashTypes.DANGER)
+                return redirect(url_for(".privacy_zones_edit", id=id))
+            existing = DB.session.scalar(
+                sqlalchemy.select(PrivacyZone).where(PrivacyZone.name == name)
+            )
+            if existing is not None and existing.id != id:
+                flasher.flash_message(
+                    _("A privacy zone named '%(name)s' already exists.", name=name),
+                    FlashTypes.DANGER,
+                )
+                return redirect(url_for(".privacy_zones_edit", id=id))
+
+            points = _parse_zone_geojson(name, geojson_str, flasher)
+            if points is None:
+                return redirect(url_for(".privacy_zones_edit", id=id))
+
+            zone.name = name
+            zone.points = points
+            DB.session.commit()
+            flasher.flash_message(
+                _("Privacy zone '%(name)s' updated.", name=name), FlashTypes.SUCCESS
+            )
+            return redirect(url_for(".privacy_zones"))
+
+        return render_template(
+            "settings/privacy-zones-edit.html.j2",
+            zone=zone,
+            zone_geojson=_wrap_coordinates(zone.points),
+        )
+
+    @blueprint.route("/privacy-zones/delete/<int:id>", methods=["POST"])
+    @needs_authentication(authenticator)
+    def privacy_zones_delete(id: int):
+        zone = DB.session.get_one(PrivacyZone, id)
+        zone_name = zone.name
+        DB.session.delete(zone)
+        DB.session.commit()
+        flasher.flash_message(
+            _("Privacy zone '%(name)s' deleted.", name=zone_name), FlashTypes.SUCCESS
+        )
+        return redirect(url_for(".privacy_zones"))
 
     @blueprint.route("/segmentation", methods=["GET", "POST"])
     @needs_authentication(authenticator)
@@ -1349,65 +1430,69 @@ def _wrap_coordinates(coordinates: list[list[float]]) -> dict:
     }
 
 
-def save_privacy_zones(zone_names: list[str], zone_geojsons: list[str]) -> None:
-    assert len(zone_names) == len(zone_geojsons)
-    new_zone_config = {}
+def _parse_zone_geojson(
+    zone_name: str, zone_geojson_str: str, flasher: Flasher
+) -> list[list[float]] | None:
+    try:
+        zone_geojson = json.loads(zone_geojson_str)
+    except json.decoder.JSONDecodeError as e:
+        flasher.flash_message(
+            _(
+                "Could not parse GeoJSON for %(name)s due to the following error: %(error)s",
+                name=zone_name,
+                error=e,
+            ),
+            FlashTypes.DANGER,
+        )
+        return None
 
-    for zone_name, zone_geojson_str in zip(zone_names, zone_geojsons):
-        if not zone_name or not zone_geojson_str:
-            continue
+    if zone_geojson.get("type") != "FeatureCollection":
+        flasher.flash_message(
+            _(
+                "Pasted GeoJSON for %(name)s must be of type 'FeatureCollection'.",
+                name=zone_name,
+            ),
+            FlashTypes.DANGER,
+        )
+        return None
 
-        try:
-            zone_geojson = json.loads(zone_geojson_str)
-        except json.decoder.JSONDecodeError as e:
-            flash(
-                f"Could not parse GeoJSON for {zone_name} due to the following error: {e}"
-            )
-            continue
+    features = zone_geojson.get("features", [])
 
-        if not zone_geojson["type"] == "FeatureCollection":
-            flash(
-                f"Pasted GeoJSON for {zone_name} must be of type 'FeatureCollection'.",
-                category="danger",
-            )
-            continue
+    if len(features) != 1:
+        flasher.flash_message(
+            _(
+                "Pasted GeoJSON for %(name)s must contain exactly one feature. You cannot have multiple shapes for one privacy zone.",
+                name=zone_name,
+            ),
+            FlashTypes.DANGER,
+        )
+        return None
 
-        features = zone_geojson["features"]
+    geometry = features[0]["geometry"]
 
-        if not len(features) == 1:
-            flash(
-                f"Pasted GeoJSON for {zone_name} must contain exactly one feature. You cannot have multiple shapes for one privacy zone",
-                category="danger",
-            )
-            continue
+    if geometry["type"] != "Polygon":
+        flasher.flash_message(
+            _(
+                "Geometry for %(name)s is not a polygon. You need to create a polygon (or circle or rectangle).",
+                name=zone_name,
+            ),
+            FlashTypes.DANGER,
+        )
+        return None
 
-        feature = features[0]
-        geometry = feature["geometry"]
+    coordinates = geometry["coordinates"]
 
-        if not geometry["type"] == "Polygon":
-            flash(
-                f"Geometry for {zone_name} is not a polygon. You need to create a polygon (or circle or rectangle).",
-                category="danger",
-            )
-            continue
+    if len(coordinates) != 1:
+        flasher.flash_message(
+            _(
+                "Polygon for %(name)s consists of multiple polygons. Please supply a simple one.",
+                name=zone_name,
+            ),
+            FlashTypes.DANGER,
+        )
+        return None
 
-        coordinates = geometry["coordinates"]
-
-        if not len(coordinates) == 1:
-            flash(
-                f"Polygon for {zone_name} consists of multiple polygons. Please supply a simple one.",
-                category="danger",
-            )
-            continue
-
-        points = coordinates[0]
-
-        new_zone_config[zone_name] = points
-
-    DB.session.execute(sqlalchemy.delete(PrivacyZone))
-    for name, points in new_zone_config.items():
-        DB.session.add(PrivacyZone(name=name, points=points))
-    DB.session.commit()
+    return coordinates[0]
 
 
 def _add_alpha_if_needed(color_str: str) -> str:
