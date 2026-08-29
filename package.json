@@ -17,7 +17,7 @@
   "dependencies": {
     "bootstrap": "^5.3.8",
     "leaflet": "^1.9.4",
-    "leaflet-relief": "^1.5.2",
+    "leaflet-relief": "^1.7.0",
     "leaflet-simplestyle": "^1.2.4",
     "leaflet.fullscreen": "^5.3.3",
     "leaflet.markercluster": "^1.5.3",
