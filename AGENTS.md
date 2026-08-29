@@ -44,9 +44,7 @@ Reason: The time of readers is precious.
 
 Rule: Work on `main` in this particular project.
 
-Rule: Add references like `Refs: GH-123` to the trailer of the commit message.
-
-Rule: Never use magic terms like "fixes" that would close a GitHub ticket on push.
+Rule: Add references like `Refs: GH-123` to the trailer of the commit message. If it is really clear that an issue is solved, you may use `Closes: GH-123`.
 
 Rule: Don't commit code that I haven't reviewed.
 
