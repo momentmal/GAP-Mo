@@ -30,6 +30,7 @@ Changed:
 Fixed:
 
 - The elevation Eddington number is shown as the number of days, not as the elevation gain. ([GH-501](https://github.com/martin-ueding/geo-activity-playground/issues/501))
+- The yearly elevation Eddington number no longer shows NaN when every day of the year meets its elevation threshold. ([GH-502](https://github.com/martin-ueding/geo-activity-playground/issues/502))
 
 
 ## Version 1.51.0 — 2026-08-23
