@@ -156,6 +156,30 @@ def create_github_release(version: str) -> None:
         print(f"[skip] GitHub release {version} already exists")
 
 
+def changelog_issues(version: str) -> list[int]:
+    notes = capture(
+        "uv", "run", "python3", "extract-changelog.py", str(CHANGELOG), version
+    )
+    return sorted({int(number) for number in re.findall(r"GH-(\d+)", notes)})
+
+
+def comment_on_released_issues(version: str) -> None:
+    step("Comment on released issues")
+    message = (
+        f"[Automated Message] Changes related to this issue "
+        f"have been released with version {version}."
+    )
+    for number in changelog_issues(version):
+        comments = json.loads(
+            capture("gh", "issue", "view", str(number), "--json", "comments")
+        )["comments"]
+        if any(comment["body"].strip() == message for comment in comments):
+            print(f"[skip] GH-{number} already notified")
+        else:
+            run("gh", "issue", "comment", str(number), "--body", message)
+            print(f"Commented on GH-{number}")
+
+
 def post_to_mastodon(version: str) -> None:
     step("Post to Mastodon")
 
@@ -222,6 +246,7 @@ def main() -> None:
     build_wheel()
     publish_to_pypi(version)
     create_github_release(version)
+    comment_on_released_issues(version)
     post_to_mastodon(version)
     restore_unreleased_section()
     commit_changelog_restore()
