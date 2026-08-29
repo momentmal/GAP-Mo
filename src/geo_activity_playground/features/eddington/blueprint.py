@@ -75,6 +75,7 @@ def _render_eddington_template(
         display_name=display_name,
         unit=column.unit,
         eddington_number=en_per_day,
+        eddington_threshold=en_per_day * divisor,
         logarithmic_plot=_make_eddington_plot(
             eddington_df_per_day, en_per_day, "Days", column_name, display_name, divisor
         ),
@@ -88,13 +89,13 @@ def _render_eddington_template(
             divisor,
         ),
         eddington_table=eddington_df_per_day.loc[
-            (eddington_df_per_day[column_name] > en_per_day)
-            & (eddington_df_per_day[column_name] <= en_per_day + 10 * divisor)
+            (eddington_df_per_day[column_name] > en_per_day * divisor)
+            & (eddington_df_per_day[column_name] <= (en_per_day + 10) * divisor)
             & (eddington_df_per_day[column_name] % divisor == 0)
         ].to_dict(orient="records"),
         eddington_table_weeks=eddington_df_per_week.loc[
-            (eddington_df_per_week[column_name] > en_per_week)
-            & (eddington_df_per_week[column_name] <= en_per_week + 10 * divisor)
+            (eddington_df_per_week[column_name] > en_per_week * divisor)
+            & (eddington_df_per_week[column_name] <= (en_per_week + 10) * divisor)
             & (eddington_df_per_week[column_name] % divisor == 0)
         ].to_dict(orient="records"),
         **search_vars,
@@ -118,12 +119,9 @@ def _get_values_per_group(grouped, column_name, divisor) -> tuple[int, pd.DataFr
     )
     eddington["total"] = eddington["count"][::-1].cumsum()[::-1]
     eddington[f"{column_name}_div"] = eddington[column_name] // divisor
-    en = (
-        eddington.loc[eddington["total"] >= eddington[f"{column_name}_div"]][
-            f"{column_name}_div"
-        ].iloc[-1]
-        * divisor
-    )
+    en = eddington.loc[eddington["total"] >= eddington[f"{column_name}_div"]][
+        f"{column_name}_div"
+    ].iloc[-1]
     eddington["missing"] = eddington[f"{column_name}_div"] - eddington["total"]
 
     return en, eddington
@@ -152,12 +150,12 @@ def _make_eddington_plot(
                 .encode(
                     alt.X(
                         column_name,
-                        scale=alt.Scale(domainMin=0, domainMax=en * 3),
+                        scale=alt.Scale(domainMin=0, domainMax=en * divisor * 3),
                         title=display_name,
                     ),
                     alt.Y(
                         "total",
-                        scale=alt.Scale(domainMax=en / divisor * 1.5),
+                        scale=alt.Scale(domainMax=en * 1.5),
                         title=_("%(interval)s exceeding %(display_name)s")
                         % {"interval": interval, "display_name": display_name},
                     ),
@@ -187,14 +185,14 @@ def _make_eddington_plot(
 
 def _get_eddington_number(elevation_gains: pd.Series, divisor: int) -> int:
     if len(elevation_gains) == 1:
-        if elevation_gains.iloc[0] >= 1:
+        if elevation_gains.iloc[0] >= divisor:
             return 1
 
     sorted_elevation_gains = sorted(elevation_gains, reverse=True)
 
     for number_of_days, elevation_gain in enumerate(sorted_elevation_gains, 1):
         if elevation_gain / divisor < number_of_days:
-            return (number_of_days - 1) * divisor
+            return number_of_days - 1
 
 
 def _get_yearly_eddington(
@@ -236,7 +234,7 @@ def _get_eddington_number_history(
         eddington_number_history["date"].append(
             datetime.datetime.combine(date, datetime.datetime.min.time())
         )
-        eddington_number_history["eddington_number"].append(len(top_days) * divisor)
+        eddington_number_history["eddington_number"].append(len(top_days))
     history = pd.DataFrame(eddington_number_history)
 
     return to_vega(

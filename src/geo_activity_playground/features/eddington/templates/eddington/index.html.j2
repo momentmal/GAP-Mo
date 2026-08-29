@@ -37,7 +37,7 @@
 
         <p>{{ _('Your Eddington number is') }} <b>{{ eddington_number }}</b>.</p>
 
-        <p>{{ _('That means that on %(eddington_number)s separate days you have recorded activities with a %(display_name)s exceeding %(eddington_number)s %(unit)s.', eddington_number=eddington_number, display_name=display_name, unit=unit) }} {{ _('Achieving a high %(display_name)s is one thing, doing so often is another. But doing so often is hard. Also if you increment the Eddington number, all days with a lower %(display_name)s will not count any more. It becomes increasingly hard to increment the Eddington number because you don\'t only need to achieve a higher count, but all lesser activities don\'t count towards the bigger number.', display_name=display_name) }}
+        <p>{{ _('That means that on %(eddington_number)s separate days you have recorded activities with a %(display_name)s exceeding %(eddington_threshold)s %(unit)s.', eddington_number=eddington_number, eddington_threshold=eddington_threshold, display_name=display_name, unit=unit) }} {{ _('Achieving a high %(display_name)s is one thing, doing so often is another. But doing so often is hard. Also if you increment the Eddington number, all days with a lower %(display_name)s will not count any more. It becomes increasingly hard to increment the Eddington number because you don\'t only need to achieve a higher count, but all lesser activities don\'t count towards the bigger number.', display_name=display_name) }}
         </p>
     </div>
 
