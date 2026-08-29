@@ -21,6 +21,10 @@ Added:
 
 - Add opt-in settings to apply privacy zones to activity tracks everywhere, and separately to the heatmap. Both default to off. ([GH-504](https://github.com/martin-ueding/geo-activity-playground/issues/504))
 
+Changed:
+
+- Split the privacy zones settings page into an overview and separate new/edit/delete pages, matching the pattern used for activity kinds and tags.
+
 Fixed:
 
 - Fix internal server error on the equipment overview page when an equipment has no activities yet. ([GH-503](https://github.com/martin-ueding/geo-activity-playground/issues/503))
