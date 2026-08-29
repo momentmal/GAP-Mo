@@ -17,6 +17,10 @@ Types of changes
 
 ## Unreleased
 
+Fixed:
+
+- Fix internal server error on the equipment overview page when an equipment has no activities yet. ([GH-503](https://github.com/martin-ueding/geo-activity-playground/issues/503))
+
 
 ## Version 1.52.0 — 2026-08-29
 
