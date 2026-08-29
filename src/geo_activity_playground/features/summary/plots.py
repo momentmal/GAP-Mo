@@ -62,10 +62,10 @@ def plot_year_cumulative(df: pd.DataFrame, column: ColumnDescription) -> str:
         .encode(
             alt.X("week", title=_("Week")),
             alt.Y(column.name, title=f"{column.display_name} / {column.unit}"),
-            alt.Color("iso_year:N", title=_("Year")),
+            alt.Color("iso_year:O", scale=alt.Scale(scheme="viridis"), title=_("Year")),
             [
                 alt.Tooltip("week", title=_("Week")),
-                alt.Tooltip("iso_year:N", title=_("Year")),
+                alt.Tooltip("iso_year:O", title=_("Year")),
                 alt.Tooltip(
                     column.name,
                     title=f"{column.display_name} / {column.unit}",
