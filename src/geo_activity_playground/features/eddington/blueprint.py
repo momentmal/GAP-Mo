@@ -184,15 +184,13 @@ def _make_eddington_plot(
 
 
 def _get_eddington_number(elevation_gains: pd.Series, divisor: int) -> int:
-    if len(elevation_gains) == 1:
-        if elevation_gains.iloc[0] >= divisor:
-            return 1
-
     sorted_elevation_gains = sorted(elevation_gains, reverse=True)
 
     for number_of_days, elevation_gain in enumerate(sorted_elevation_gains, 1):
         if elevation_gain / divisor < number_of_days:
             return number_of_days - 1
+
+    return len(sorted_elevation_gains)
 
 
 def _get_yearly_eddington(
