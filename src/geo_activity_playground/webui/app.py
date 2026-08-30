@@ -460,6 +460,7 @@ def create_app(
             "num_activities": count_activities(),
             "map_tile_attribution": config_accessor.map().map_tile_attribution,
             "currency": config_accessor.ui().currency,
+            "show_progress_markers": config_accessor.ui().show_progress_markers,
             "request_url": urllib.parse.quote_plus(request.url),
             "explorer_zoom_levels": sorted(config_accessor.ui().explorer_zoom_levels)
             or [14],

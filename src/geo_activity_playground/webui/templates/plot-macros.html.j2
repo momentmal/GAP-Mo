@@ -81,8 +81,8 @@
                         icon: window.progressMarkerIcon(progress, feature?.properties?.marker_is_eighth)
                     });
                 }
-                return L.circleMarker(latlng);
                 {% endif %}
+                return L.circleMarker(latlng);
             }
         }).addTo(map)
         if (geojson_layer.getLayers().length > 0) {
