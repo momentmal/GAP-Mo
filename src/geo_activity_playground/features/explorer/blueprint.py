@@ -26,7 +26,12 @@ from flask_babel import gettext as _
 
 from ...core.config import ConfigAccessor
 from ...core.coordinates import Bounds
-from ...core.datamodel import DB, Activity, TileVisit
+from ...core.datamodel import (
+    DB,
+    Activity,
+    TileVisit,
+    apply_privacy_zones_to_tracks_if_enabled,
+)
 from ...core.grid import (
     geojson_bounding_box_for_tile_collection,
     get_border_tiles,
@@ -614,13 +619,19 @@ def make_explorer_blueprint(
         ]
         if not activities:
             return _png_response(empty)
+        ui_config = config_accessor.ui()
         return _png_response(
             render_activity_lines_tile_image(
-                (activity.time_series for activity in activities),
+                (
+                    apply_privacy_zones_to_tracks_if_enabled(
+                        activity.time_series, ui_config
+                    )
+                    for activity in activities
+                ),
                 z,
                 x,
                 y,
-                config_accessor.ui().activity_line_color,
+                ui_config.activity_line_color,
             )
         )
 
