@@ -1,5 +1,6 @@
 """Shared fixtures for all tests."""
 
+import os
 import pathlib
 import shutil
 
@@ -8,6 +9,7 @@ import pytest
 from flask import Flask
 
 from geo_activity_playground.core.config import ConfigAccessor
+from geo_activity_playground.core.datamodel import DB
 from geo_activity_playground.core.scan import scan_for_activities
 from geo_activity_playground.webui.app import create_app
 
@@ -49,7 +51,7 @@ def playground(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch):
     inside a directory of their own.
     """
     monkeypatch.chdir(tmp_path)
-    for name in ["Cache", "Time Series", "Activities", "Photos"]:
+    for name in PLAYGROUND_DIRS:
         (tmp_path / name).mkdir()
     return tmp_path
 
@@ -82,29 +84,75 @@ def client(app: Flask):
     return app.test_client()
 
 
+PLAYGROUND_DIRS = ["Cache", "Time Series", "Activities", "Photos"]
+
+SEEDED_DATABASE = "seeded.sqlite"
+
+
+@pytest.fixture(scope="session")
+def seeded_template(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+    """A playground with the Zeeland test corpus imported, built once.
+
+    Running the import costs several seconds, which dominated the suite when
+    every test that needs activities paid it again. The result is a directory
+    that ``seeded_app`` copies, so each test still gets untouched state.
+    """
+    template = tmp_path_factory.mktemp("seeded-template")
+    testdata_dir = pathlib.Path(__file__).parent.parent / "testdata"
+    previous_dir = pathlib.Path.cwd()
+    os.chdir(template)
+    try:
+        for name in PLAYGROUND_DIRS:
+            (template / name).mkdir()
+        shutil.copytree(
+            testdata_dir / "Zeeland" / "Activities",
+            template / "Activities",
+            dirs_exist_ok=True,
+        )
+        app = create_app(
+            database_uri=f"sqlite:///{template / SEEDED_DATABASE}",
+            secret_key="test-secret-key",
+            run_migrations=False,
+        )
+        with app.app_context():
+            config_accessor = ConfigAccessor()
+            config_accessor.activity_import().metadata_extraction_regexes = (
+                METADATA_EXTRACTION_REGEXES
+            )
+            config_accessor.save()
+            scan_for_activities(
+                config_accessor,
+                skip_strava=True,
+                skip_hammerhead=True,
+            )
+            # Flush the file, so that copies of it are complete.
+            DB.engine.dispose()
+    finally:
+        os.chdir(previous_dir)
+    return template
+
+
 @pytest.fixture
-def seeded_app(app: Flask, testdata_dir: pathlib.Path):
+def seeded_app(playground: pathlib.Path, seeded_template: pathlib.Path):
     """An app whose database is filled by importing the Zeeland test corpus.
 
     This exercises the real import pipeline, so the database contains
-    activities, time series, kinds, equipments, tile visits and clusters.
+    activities, time series, kinds, equipments, tile visits and clusters. The
+    import itself runs once per session in ``seeded_template``; this copy of it
+    is private to the test and may be modified freely.
     """
-    shutil.copytree(
-        testdata_dir / "Zeeland" / "Activities",
-        pathlib.Path("Activities"),
-        dirs_exist_ok=True,
+    for name in PLAYGROUND_DIRS:
+        shutil.copytree(seeded_template / name, playground / name, dirs_exist_ok=True)
+    database = playground / SEEDED_DATABASE
+    shutil.copy(seeded_template / SEEDED_DATABASE, database)
+
+    app = create_app(
+        database_uri=f"sqlite:///{database}",
+        secret_key="test-secret-key",
+        run_migrations=False,
     )
-    with app.app_context():
-        config_accessor = ConfigAccessor()
-        config_accessor.activity_import().metadata_extraction_regexes = (
-            METADATA_EXTRACTION_REGEXES
-        )
-        config_accessor.save()
-        scan_for_activities(
-            config_accessor,
-            skip_strava=True,
-            skip_hammerhead=True,
-        )
+    app.config["TESTING"] = True
+    app.jinja_env.undefined = jinja2.StrictUndefined
     return app
 
 
