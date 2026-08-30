@@ -12,9 +12,6 @@ Project context:
 
 Rule: Use modern Python syntax with type annotations.
 
-Rule: Generate Alembic migrations with `uv run alembic revision --autogenerate -m 'MESSAGE'` using the `database.sqlite` checked into the repository as a schema anchor.
-Reason: Writing migrations oneself is error-prone, Alembic does valuable checks.
-
 Rule: Use `_(…)` for user facing strings.
 
 Rule: If similar functionality already exist, please asks me to generalize it before creating duplicated code.
@@ -22,38 +19,12 @@ Reason: Duplicated code has a cognitive burden.
 
 ## Documentation
 
-Rule: Document changes in the `docs/changelog.md` in the `## Unreleased` section.
-
-Rule: Changelog entries use imperative style.
-Example: "Gracefully handle case when no activity kinds are considered for achievements but no prior tiles have been extracted."
-
-Rule: Changelog entries use the sections defined at the beginning of the file.
-
-Rule: Changelog entries go into separate `docs:` commits.
-Reason: Reverting a feature doesn't undo the past.
-
-Rule: When adding a new documentation file, it needs to be added to `docs/.vitepress/config.ts`.
-
-Rule: If you were prompted to work on a GitHub Issue, refer to the issue in the changelog.
-Example: `- Added new feature. (GH-123)`
-
 Rule: Don't hard-wrap Markdown content.
 Reason: Editors have soft-wrap that is more flexible.
-
-Rule: Keep changelog entries concise and brief. 160 characters (excluding GitHub Issue link) is the maximum. Only include the "what" in the changelog entry; the "why" is in the ticket, the "how" is in the commit. Don't try to cram everything into a single sentence, use multiple ones. Just keep the detail level sensible and obey the length limit.
-Reason: The time of readers is precious.
 
 ## Git
 
 Rule: Work on `main` in this particular project.
-
-Rule: Add references like `Refs: GH-123` to the trailer of the commit message. If it is really clear that an issue is solved, you may use `Closes: GH-123`.
-
-Rule: Don't commit code that I haven't reviewed.
-
-Rule: Use conventional commits without scope.
-Reason: Version bumps are done based on conventional commits. The project is too small for scopes.
-Example: See git log.
 
 ## Communication
 
