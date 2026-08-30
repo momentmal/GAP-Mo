@@ -32,6 +32,16 @@ services:
     restart: unless-stopped
 ```
 
+### Limiting memory usage
+
+Each worker process needs roughly 400 MB of memory. GAP picks the number of workers from the CPU cores and the memory limit of the container, so on a small machine it starts fewer of them automatically. If you want to trim it further, set the [environment variables](starting-the-webserver.md#configuration-via-environment-variables) in the compose file:
+
+```yaml
+    environment:
+      GAP_WORKERS: 1
+      GAP_THREADS: 2
+```
+
 ## Downloading the image and running the container
 
 ```bash

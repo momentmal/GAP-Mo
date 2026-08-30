@@ -13,6 +13,11 @@ services:
     # You may change the mountpoint to your needs	
     volumes:
       - /srv/playground_data:/data
+    # Tunes the HTTP server. The defaults are derived from the available CPU
+    # cores and memory; lower them further on a memory-constrained host.
+    #environment:
+    #  GAP_WORKERS: 1
+    #  GAP_THREADS: 2
     # Ensures the container automatically restarts if it stops
     # other options are: no ; unless-stopped ; on-failure
     restart: always

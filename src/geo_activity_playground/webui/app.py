@@ -43,6 +43,7 @@ from ..core.datamodel import (
 )
 from ..core.db_maintenance import run_database_maintenance_if_due
 from ..core.heart_rate import HeartRateZoneComputer
+from ..core.host_resources import default_worker_count
 from ..core.paths import TIME_SERIES_DIR
 from ..core.raster_map import (
     BlankImageTransform,
@@ -496,8 +497,9 @@ def web_ui_main(
     hammerhead_end: str | None = None,
     http_server: Literal["waitress", "werkzeug", "gunicorn"] = "gunicorn",
     threads: int = 8,
-    workers: int = 4,
+    workers: int | None = None,
 ) -> None:
+    workers = workers or default_worker_count()
     os.chdir(basedir)
 
     warnings.filterwarnings("ignore", "__array__ implementation doesn't")

@@ -43,10 +43,22 @@ In case you don't like the default value of `127.0.0.1:5000`, you can use the op
 
 ## Optional: tuning the HTTP server
 
-`serve` uses Gunicorn by default with 4 worker processes and 8 threads per worker. You can tune these with `--workers` and `--threads`:
+`serve` uses Gunicorn by default with 8 threads per worker. The number of worker processes is derived from the machine: at most 4, but never more than there are CPU cores, and never more than the available memory allows at roughly 400 MB per worker. On a container limited to 2 GB you therefore get 2 workers instead of 4. You can override both with `--workers` and `--threads`:
 
 ```bash
 geo-activity-playground --basedir YOUR_BASEDIR serve --workers 8 --threads 4
 ```
 
 If you prefer single-process threaded serving (the old default), pass `--http-server waitress`. For development there is also `--http-server werkzeug`.
+
+## Configuration via environment variables
+
+Where passing command line arguments is awkward, for instance in a container, these options can also be set through the environment. Command line arguments take precedence.
+
+| Environment variable | Command line argument |
+| --- | --- |
+| `GAP_HOST` | `--host` |
+| `GAP_PORT` | `--port` |
+| `GAP_HTTP_SERVER` | `--http-server` |
+| `GAP_WORKERS` | `--workers` |
+| `GAP_THREADS` | `--threads` |

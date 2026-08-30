@@ -1,10 +1,12 @@
 import argparse
 import logging
+import os
 import pathlib
 import sys
 
 import coloredlogs
 
+from .core.host_resources import default_worker_count
 from .features.activity_photos.cli import (
     register_main_annotate_photos,
     register_main_inspect_photo,
@@ -18,6 +20,25 @@ from .webui.app import create_app, web_ui_main
 from .webui.static_assets import MissingFrontendAssetsError
 
 logger = logging.getLogger(__name__)
+
+
+def _env_int(name: str, fallback: int) -> int:
+    value = os.environ.get(name)
+    if value is None:
+        return fallback
+    try:
+        return int(value)
+    except ValueError:
+        sys.exit(f"Environment variable {name} must be an integer, got '{value}'.")
+
+
+def _env_choice(name: str, fallback: str, choices: list[str]) -> str:
+    value = os.environ.get(name, fallback)
+    if value not in choices:
+        sys.exit(
+            f"Environment variable {name} must be one of {', '.join(choices)}, got '{value}'."
+        )
+    return value
 
 
 def main_export_kml(options: argparse.Namespace) -> None:
@@ -155,36 +176,41 @@ def main() -> None:
     )
     subparser.add_argument(
         "--host",
-        default="127.0.0.1",
-        help="IP address to listen on (default: %(default)s)",
+        default=os.environ.get("GAP_HOST", "127.0.0.1"),
+        help="IP address to listen on, also settable via GAP_HOST (default: %(default)s)",
     )
     subparser.add_argument(
         "--port",
-        default=5000,
+        default=_env_int("GAP_PORT", 5000),
         type=int,
-        help="Port to listen on (default: %(default)s)",
+        help="Port to listen on, also settable via GAP_PORT (default: %(default)s)",
+    )
+    http_servers = (
+        ["waitress", "werkzeug"]
+        if sys.platform == "win32"
+        else ["waitress", "werkzeug", "gunicorn"]
     )
     subparser.add_argument(
         "--http-server",
-        choices=(
-            ["waitress", "werkzeug"]
-            if sys.platform == "win32"
-            else ["waitress", "werkzeug", "gunicorn"]
+        choices=http_servers,
+        default=_env_choice(
+            "GAP_HTTP_SERVER",
+            "waitress" if sys.platform == "win32" else "gunicorn",
+            http_servers,
         ),
-        default="waitress" if sys.platform == "win32" else "gunicorn",
-        help="HTTP server implementation to use (default: %(default)s)",
+        help="HTTP server implementation to use, also settable via GAP_HTTP_SERVER (default: %(default)s)",
     )
     subparser.add_argument(
         "--threads",
         type=int,
-        default=8,
-        help="Number of threads per server process (default: %(default)s)",
+        default=_env_int("GAP_THREADS", 8),
+        help="Number of threads per server process, also settable via GAP_THREADS (default: %(default)s)",
     )
     subparser.add_argument(
         "--workers",
         type=int,
-        default=4,
-        help="Number of worker processes (Gunicorn only, default: %(default)s)",
+        default=_env_int("GAP_WORKERS", default_worker_count()),
+        help="Number of worker processes, also settable via GAP_WORKERS (Gunicorn only, default: %(default)s)",
     )
     subparser.add_argument("--skip-reload", action=argparse.BooleanOptionalAction)
     subparser.add_argument(
