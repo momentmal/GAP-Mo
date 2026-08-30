@@ -17,6 +17,9 @@ Types of changes
 
 ## Unreleased
 
+Added:
+
+- Allow removing a picture from equipment. ([GH-507](https://github.com/martin-ueding/geo-activity-playground/issues/507))
 
 ## Version 1.53.0 — 2026-08-29
 
