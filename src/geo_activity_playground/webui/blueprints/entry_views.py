@@ -34,12 +34,14 @@ from ..plot_util import make_kind_scale, to_vega
 def register_entry_views(app: flask.Flask, config_accessor: ConfigAccessor) -> None:
     @app.route("/")
     def index() -> ResponseReturnValue:
+        config = config_accessor.ui()
         context: dict[str, Any] = {
             "latest_activities": [],
             "due_tasks": get_due_tasks(),
             "period_stats": [],
             "equipment_status": [],
             "recent_records": [],
+            "show_progress_markers": config.show_progress_markers,
         }
         df = query_activity_meta()
 

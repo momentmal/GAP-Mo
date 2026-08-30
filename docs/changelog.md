@@ -13,6 +13,10 @@ Types of changes
     *Security* in case of vulnerabilities.
 -->
 
+Fixed:
+
+- The "Show progress markers on the activity map" setting is honored on the homepage. ([GH-511](https://github.com/martin-ueding/geo-activity-playground/pull/511))
+
 <!-- next version below this line -->
 
 ## Unreleased
