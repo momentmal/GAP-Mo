@@ -20,6 +20,7 @@ Types of changes
 Added:
 
 - Allow removing a picture from equipment. ([GH-507](https://github.com/martin-ueding/geo-activity-playground/issues/507))
+- Allow deleting equipment that has no activities or kind assigned to it. ([GH-506](https://github.com/martin-ueding/geo-activity-playground/issues/506))
 
 ## Version 1.53.0 — 2026-08-29
 
