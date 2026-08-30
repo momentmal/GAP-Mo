@@ -13,10 +13,6 @@ Types of changes
     *Security* in case of vulnerabilities.
 -->
 
-Fixed:
-
-- The "Show progress markers on the activity map" setting is honored on the homepage. ([GH-511](https://github.com/martin-ueding/geo-activity-playground/pull/511))
-
 <!-- next version below this line -->
 
 ## Unreleased
@@ -33,6 +29,7 @@ Changed:
 
 Fixed:
 
+- Honor the "Show progress markers on the activity map" setting on all maps, not just the activity page. ([GH-511](https://github.com/martin-ueding/geo-activity-playground/pull/511))
 - Seed the cluster and square history plots with counted inaccessible tiles, so they no longer contradict the headline numbers. ([GH-513](https://github.com/martin-ueding/geo-activity-playground/issues/513))
 - Apply the "apply privacy zones to activity tracks" setting to the "New Tiles Activity Track" map layer as well. ([GH-509](https://github.com/martin-ueding/geo-activity-playground/issues/509))
 - Sum calories across all session messages in a FIT file instead of keeping only the last one, fixing chained/concatenated FIT files. ([GH-508](https://github.com/martin-ueding/geo-activity-playground/issues/508))
