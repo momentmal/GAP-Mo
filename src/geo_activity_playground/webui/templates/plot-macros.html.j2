@@ -74,6 +74,7 @@
                 return {};
             },
             pointToLayer: (feature, latlng) => {
+                {% if show_progress_markers %}
                 const progress = feature?.properties?.marker_progress;
                 if (Number.isFinite(progress)) {
                     return L.marker(latlng, {
@@ -81,6 +82,7 @@
                     });
                 }
                 return L.circleMarker(latlng);
+                {% endif %}
             }
         }).addTo(map)
         if (geojson_layer.getLayers().length > 0) {
