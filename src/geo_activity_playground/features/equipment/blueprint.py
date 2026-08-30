@@ -302,16 +302,18 @@ def _equipment_plots(config_accessor: ConfigAccessor, equipment: str) -> dict[st
 
 def _apply_uploaded_picture(equipment: Equipment, flasher: Flasher) -> None:
     image_file = request.files.get("image")
-    if not image_file or not image_file.filename:
-        return
-    try:
-        new_filename = save_internal_picture(image_file)
-    except ValueError as e:
-        flasher.flash_message(str(e), FlashTypes.WARNING)
-        return
-    if equipment.picture_filename:
+    if image_file and image_file.filename:
+        try:
+            new_filename = save_internal_picture(image_file)
+        except ValueError as e:
+            flasher.flash_message(str(e), FlashTypes.WARNING)
+            return
+        if equipment.picture_filename:
+            delete_internal_picture(equipment.picture_filename)
+        equipment.picture_filename = new_filename
+    elif request.form.get("remove_image") and equipment.picture_filename:
         delete_internal_picture(equipment.picture_filename)
-    equipment.picture_filename = new_filename
+        equipment.picture_filename = None
 
 
 def make_equipment_blueprint(

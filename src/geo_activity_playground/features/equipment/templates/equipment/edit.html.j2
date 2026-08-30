@@ -37,6 +37,10 @@
                 <div class="mb-2">
                     <img src="{{ url_for('pictures.get', kind='internal', filename=equipment.picture_filename, size=128) }}" />
                 </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input" id="remove_image" name="remove_image" />
+                    <label for="remove_image" class="form-check-label">{{ _('Remove picture') }}</label>
+                </div>
                 {% endif %}
                 <input type="file" class="form-control" id="image" name="image" accept="image/*" />
             </div>
