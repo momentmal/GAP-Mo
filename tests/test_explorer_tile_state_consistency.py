@@ -43,11 +43,13 @@ from geo_activity_playground.features.explorer.clustering import (
     compute_max_square,
     get_cluster_history_latest_event_index,
     get_cluster_id_for_tile,
+    get_cluster_size_history_df,
     get_cluster_tile_activations_df,
     get_cluster_tile_count,
     get_cluster_tiles_at_cutoff,
     get_cluster_tiles_gained_by_activity,
     get_covered_tiles,
+    get_square_history_df,
     is_cluster_history_stale,
     mark_cluster_history_stale,
     rebuild_cluster_history,
@@ -1070,3 +1072,45 @@ def test_filtered_cluster_cache_stale_cleanup_drops_old_entries(app) -> None:
         )
         assert dropped == 1
         assert get_filtered_cluster_cache_stats() == (0, 0)
+
+
+def test_evolution_series_end_at_the_current_state_with_inaccessible_tiles(
+    app,
+) -> None:
+    """The history plots must agree with the headline numbers. (GH-513)"""
+    with app.app_context():
+        _add_tile_visits(
+            [(x, y) for x in range(3) for y in range(3) if (x, y) != (1, 1)]
+        )
+        DB.session.add(InaccessibleTile(zoom=14, tile_x=1, tile_y=1))
+        DB.session.commit()
+        _enable_counting_inaccessible()
+
+        rebuild_cluster_history(14)
+
+        covered = get_covered_tiles(14)
+        assert (
+            get_square_history_df(14)["max_square_size"].iloc[-1]
+            == (compute_max_square(covered)[2])
+        )
+        assert get_cluster_size_history_df(14)["max_cluster_size"].iloc[-1] == (
+            compute_current_cluster_state(covered).max_cluster_size
+        )
+
+
+def test_evolution_series_record_a_cluster_that_inaccessible_tiles_create(
+    app,
+) -> None:
+    """A cluster that only the seeded tiles complete still needs a point."""
+    with app.app_context():
+        _add_tile_visits(_PLUS_VISITED)
+        DB.session.add(
+            InaccessibleTile(zoom=14, tile_x=_LAKE_TILE[0], tile_y=_LAKE_TILE[1])
+        )
+        DB.session.commit()
+        _enable_counting_inaccessible()
+
+        rebuild_cluster_history(14)
+
+        assert get_cluster_size_history_df(14)["max_cluster_size"].iloc[-1] == 1
+        assert get_square_history_df(14)["max_square_size"].iloc[-1] == 1

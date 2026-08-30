@@ -40,6 +40,9 @@ class TileEvolutionState:
         self.square_evolution = pd.DataFrame()
         self.square_x: int | None = None
         self.square_y: int | None = None
+        # Tiles that are present from the origin of time, currently the
+        # inaccessible tiles that count toward cluster and square.
+        self.seed_tiles: set[tuple[int, int]] = set()
 
 
 class ClusterReplayState:
@@ -240,6 +243,7 @@ def rebuild_cluster_history(zoom: int) -> None:
     rebuild_cluster_history_for_zoom(zoom, tile_history)
 
     state = TileEvolutionState()
+    state.seed_tiles = get_counted_inaccessible_tiles(zoom)
     _compute_cluster_evolution(tile_history, state, zoom)
     _compute_square_history(tile_history, state, zoom)
     _persist_evolution_to_db(zoom, state)
@@ -720,9 +724,21 @@ def get_cluster_tile_activations_df(zoom: int) -> pd.DataFrame:
 def _compute_cluster_evolution(
     tiles: pd.DataFrame, s: TileEvolutionState, zoom: int
 ) -> None:
-    """Series of the biggest cluster size over time, via the union-find replay."""
-    state = ClusterReplayState()
+    """Series of the biggest cluster size over time, via the union-find replay.
+
+    The seed tiles are present from the origin of time, just as in
+    ``rebuild_cluster_history_for_zoom``, so the series ends at the same cluster
+    size that the current state reports.
+    """
+    state = compute_current_cluster_state(s.seed_tiles)
     rows = []
+    if state.max_cluster_size > 0 and len(tiles) > 0:
+        rows.append(
+            {
+                "time": tiles.iloc[0]["time"],
+                "max_cluster_size": state.max_cluster_size,
+            }
+        )
     for row in tqdm(
         tiles.itertuples(index=False),
         desc=f"Cluster evolution for {zoom=}",
@@ -739,7 +755,23 @@ def _compute_cluster_evolution(
 def _compute_square_history(
     tiles: pd.DataFrame, s: TileEvolutionState, zoom: int
 ) -> None:
+    """Series of the biggest square size over time.
+
+    Seeded with the same tiles as the cluster evolution, so the series ends at
+    the square that the current state reports.
+    """
     rows = []
+    s.visited_tiles.update(s.seed_tiles)
+    s.square_x, s.square_y, s.max_square_size = compute_max_square(s.visited_tiles)
+    if s.max_square_size > 0 and len(tiles) > 0:
+        rows.append(
+            {
+                "time": tiles.iloc[0]["time"],
+                "max_square_size": s.max_square_size,
+                "square_x": s.square_x,
+                "square_y": s.square_y,
+            }
+        )
     for _index, row in tqdm(
         tiles.iterrows(),
         desc=f"Square evolution for {zoom=}",
