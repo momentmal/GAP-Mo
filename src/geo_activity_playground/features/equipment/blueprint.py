@@ -423,6 +423,43 @@ def make_equipment_blueprint(
             return redirect(url_for(".show", id=equipment.id))
         return render_template("equipment/edit.html.j2", equipment=equipment)
 
+    @blueprint.route("/<int:id>/delete", methods=["POST"])
+    @needs_authentication(authenticator)
+    def delete(id: int) -> ResponseReturnValue:
+        equipment = DB.session.get_one(Equipment, id)
+        if equipment.activities:
+            flasher.flash_message(
+                _(
+                    "Equipment '%(name)s' cannot be deleted because it has activities assigned to it.",
+                    name=equipment.name,
+                ),
+                FlashTypes.WARNING,
+            )
+            return redirect(url_for(".show", id=equipment.id))
+        if equipment.default_for_kinds:
+            flasher.flash_message(
+                _(
+                    "Equipment '%(name)s' cannot be deleted because it is the default equipment for a kind.",
+                    name=equipment.name,
+                ),
+                FlashTypes.WARNING,
+            )
+            return redirect(url_for(".show", id=equipment.id))
+
+        equipment_name = equipment.name
+        if equipment.picture_filename:
+            delete_internal_picture(equipment.picture_filename)
+        for action in equipment.maintenance_actions:
+            for photo in action.photos:
+                delete_internal_picture(photo.filename)
+        DB.session.delete(equipment)
+        DB.session.commit()
+        flasher.flash_message(
+            _("Equipment '%(name)s' deleted.", name=equipment_name),
+            FlashTypes.SUCCESS,
+        )
+        return redirect(url_for(".index"))
+
     @blueprint.route("/new", methods=["GET", "POST"])
     @needs_authentication(authenticator)
     def new() -> ResponseReturnValue:

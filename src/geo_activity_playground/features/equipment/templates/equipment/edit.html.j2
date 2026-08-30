@@ -52,6 +52,15 @@
             <a href="{{ url_for('.index') }}" class="btn btn-secondary">{{ _('Cancel') }}</a>
             {% endif %}
         </form>
+        {% if equipment %}
+        <form method="POST" action="{{ url_for('.delete', id=equipment.id) }}" class="mt-2">
+            {% if equipment.activities or equipment.default_for_kinds %}
+            <button type="submit" class="btn btn-danger" disabled title="{{ _('Equipment with activities or set as a kind default cannot be deleted.') }}">{{ _('Delete') }}</button>
+            {% else %}
+            <button type="submit" class="btn btn-danger" onclick="if(!confirm('{{ _('Are you sure you want to delete this equipment?') }}')){event.preventDefault()}">{{ _('Delete') }}</button>
+            {% endif %}
+        </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
