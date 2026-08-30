@@ -29,6 +29,7 @@ Changed:
 
 Fixed:
 
+- Make explorer tiles clickable again when there is no cluster to zoom to, like on a fresh installation. ([GH-512](https://github.com/martin-ueding/geo-activity-playground/pull/512))
 - Honor the "Show progress markers on the activity map" setting on all maps, not just the activity page. ([GH-511](https://github.com/martin-ueding/geo-activity-playground/pull/511))
 - Seed the cluster and square history plots with counted inaccessible tiles, so they no longer contradict the headline numbers. ([GH-513](https://github.com/martin-ueding/geo-activity-playground/issues/513))
 - Apply the "apply privacy zones to activity tracks" setting to the "New Tiles Activity Track" map layer as well. ([GH-509](https://github.com/martin-ueding/geo-activity-playground/issues/509))
