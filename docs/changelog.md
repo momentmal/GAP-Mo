@@ -21,6 +21,11 @@ Added:
 
 - Allow removing a picture from equipment. ([GH-507](https://github.com/martin-ueding/geo-activity-playground/issues/507))
 - Allow deleting equipment that has no activities or kind assigned to it. ([GH-506](https://github.com/martin-ueding/geo-activity-playground/issues/506))
+- Set the `serve` options host, port, HTTP server, workers and threads via the `GAP_*` environment variables. ([GH-510](https://github.com/martin-ueding/geo-activity-playground/issues/510))
+
+Changed:
+
+- Derive the default number of worker processes from the available CPU cores and memory instead of always using 4. Small containers now start fewer workers. ([GH-510](https://github.com/martin-ueding/geo-activity-playground/issues/510))
 
 Fixed:
 
